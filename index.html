@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hệ thống Quản lý Đơn hàng - Supabase</title>
+  
+  <!-- 1. Content Security Policy (CSP) chống XSS trên GitHub Pages -->
+  <meta http-equiv="Content-Security-Policy" 
+        content="default-src 'self'; 
+                 script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; 
+                 style-src 'self' 'unsafe-inline'; 
+                 connect-src 'self' https://*.supabase.co;">
+
+  <!-- 2. Nhúng Supabase JS SDK từ CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --primary: #3ecf8e;
+      --bg: #121212;
+      --card-bg: #1e1e1e;
+      --text: #ffffff;
+      --text-sub: #a0a0a0;
+      --border: #333333;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    h2, h3 { margin-top: 0; }
+    
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0 16px 0;
+      background: #2a2a2a;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: white;
+      box-sizing: border-box;
+    }
+
+    button {
+      background: var(--primary);
+      color: black;
+      font-weight: bold;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    button:hover { opacity: 0.9; }
+    .btn-logout { background: #e53e3e; color: white; width: auto; margin-top: 10px; }
+
+    .hidden { display: none !important; }
+
+    /* Table Styling */
+    .table-container { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+
+    th { background: #252525; color: var(--text-sub); }
+    tr:hover { background: #2a2a2a; }
+
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      background: #333;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- KHỐI ĐĂNG NHẬP -->
+    <div id="login-section" class="card">
+      <h2>Đăng nhập Hệ thống</h2>
+      <form id="login-form">
+        <label for="email">Email</label>
+        <input type="email" id="email" required placeholder="name@example.com">
+        
+        <label for="password">Mật khẩu</label>
+        <input type="password" id="password" required placeholder="••••••••">
+        
+        <button type="submit" id="btn-login">Đăng nhập</button>
+      </form>
+      <p id="error-msg" style="color: #ff6b6b; font-size: 14px; margin-top: 10px;"></p>
+    </div>
+
+    <!-- KHỐI DASHBOARD / DATA -->
+    <div id="dashboard-section" class="card hidden">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div>
+          <h3>Danh sách Đơn hàng</h3>
+          <small style="color: var(--text-sub)">Xin chào: <span id="user-email"></span></small>
+        </div>
+        <button onclick="logout()" class="btn-logout">Đăng xuất</button>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Ngày</th>
+              <th>Khách hàng</th>
+              <th>Sản phẩm</th>
+              <th>SL</th>
+              <th>ĐVT</th>
+              <th>Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody id="data-table-body">
+            <!-- Dữ liệu sẽ render ở đây -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ==========================================
+    // 1. CẤU HÌNH SUPABASE (Thay thông tin của bạn vào đây)
+    // ==========================================
+    const SUPABASE_URL = 'https://jaolqnqxmpllpmgewlfg.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imphb2xxbnF4bXBsbHBtZ2V3bGZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYzNjY0NTQsImV4cCI6MjEwMTk0MjQ1NH0.ZVUcyOwmta-kSPFmDJLKH-VMEyiTn8sQocGzkowQDrA';
+
+    // Khởi tạo Supabase Client chuẩn bảo mật PKCE Flow cho GitHub Pages
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        flowType: 'pkce',
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      }
+    });
+
+    const loginSection = document.getElementById('login-section');
+    const dashboardSection = document.getElementById('dashboard-section');
+    const loginForm = document.getElementById('login-form');
+    const errorMsg = document.getElementById('error-msg');
+    const dataTableBody = document.getElementById('data-table-body');
+
+    // ==========================================
+    // 2. XỬ LÝ ĐĂNG NHẬP
+    // ==========================================
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorMsg.textContent = '';
+      
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        errorMsg.textContent = 'Đăng nhập thất bại: ' + error.message;
+      } else {
+        checkAuthSession();
+      }
+    });
+
+    // ==========================================
+    // 3. LẤY DỮ LIỆU TỪ BẢNG 'orders'
+    // ==========================================
+    async function fetchOrdersData() {
+      dataTableBody.innerHTML = '<tr><td colspan="7" style="text-align:center">Đang tải dữ liệu...</td></tr>';
+
+      // Query lấy danh sách đơn hàng mới nhất
+      const { data, error } = await supabase
+        .from('orders')
+        .select('ID, OrderDate, CustomerName, Product, Quantity, Unit, Status')
+        .order('ID', { ascending: false });
+
+      if (error) {
+        console.error('Lỗi lấy data:', error);
+        dataTableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#ff6b6b">Lỗi: ${error.message}</td></tr>`;
+        return;
+      }
+
+      dataTableBody.innerHTML = '';
+
+      if (!data || data.length === 0) {
+        dataTableBody.innerHTML = '<tr><td colspan="7" style="text-align:center">Chưa có dữ liệu nào.</td></tr>';
+        return;
+      }
+
+      // Render dữ liệu an toàn (Chống XSS) bằng textContent
+      data.forEach(item => {
+        const tr = document.createElement('tr');
+
+        const fields = [
+          item.ID || '',
+          item.OrderDate || '',
+          item.CustomerName || 'N/A',
+          item.Product || '',
+          item.Quantity || 0,
+          item.Unit || '',
+          item.Status || 'pending'
+        ];
+
+        fields.forEach((text, index) => {
+          const td = document.createElement('td');
+          if (index === 6) { // Trường Status
+            const badge = document.createElement('span');
+            badge.className = 'status-badge';
+            badge.textContent = text;
+            td.appendChild(badge);
+          } else {
+            td.textContent = text;
+          }
+          tr.appendChild(td);
+        });
+
+        dataTableBody.appendChild(tr);
+      });
+    }
+
+    // ==========================================
+    // 4. KIỂM TRA PHIÊN ĐĂNG NHẬP (SESSION)
+    // ==========================================
+    async function checkAuthSession() {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (session) {
+        loginSection.classList.add('hidden');
+        dashboardSection.classList.remove('hidden');
+        document.getElementById('user-email').textContent = session.user.email;
+        fetchOrdersData();
+      } else {
+        loginSection.classList.remove('hidden');
+        dashboardSection.classList.add('hidden');
+      }
+    }
+
+    // ==========================================
+    // 5. ĐĂNG XUẤT
+    // ==========================================
+    async function logout() {
+      await supabase.auth.signOut();
+      checkAuthSession();
+    }
+
+    // Tự động kiểm tra trạng thái khi tải trang
+    checkAuthSession();
+  </script>
+</body>
+</html>
