@@ -529,45 +529,68 @@
         }
 
         .order-content {
-            padding: 16px;
+            padding: 10px;
+            display: grid;
+            gap: 2px;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
         }
 
         .order-code {
             font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 10px;
+            font-weight: 800;
+            margin: 0;
+            padding: 8px 10px;
+            border: 1px solid #dbeafe;
+            border-radius: 8px;
+            background: #eff6ff;
+            color: #1e3a8a;
         }
 
         .card-actions {
-            margin-top: 12px;
+            margin-top: 4px;
             display: flex;
-            gap: 8px;
+            justify-content: flex-end;
+            gap: 6px;
+            padding-top: 8px;
+            border-top: 1px dashed #cbd5e1;
         }
 
-        .edit-btn {
-            flex: 1;
-        }
-
-        .delete-btn {
-            flex: 1;
+        .edit-btn,
+        .delete-btn,
+        .table-action-btn {
+            width: 34px;
+            min-width: 34px;
+            height: 34px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            line-height: 1;
         }
 
         .row {
             display: flex;
-            margin: 7px 0;
-            gap: 8px;
+            align-items: flex-start;
+            gap: 10px;
+            margin: 0;
+            padding: 7px 5px;
         }
 
         .label {
-            width: 120px;
-            color: #777;
+            width: 105px;
+            color: #475569;
+            font-size: 13px;
+            font-weight: 700;
             flex-shrink: 0;
         }
 
         .value {
-            font-weight: 500;
+            font-weight: 600;
+            color: #0f172a;
+            line-height: 1.35;
             min-width: 0;
-            word-wrap: break-word;
+            word-break: break-word;
         }
 
         .status {
@@ -654,15 +677,10 @@
             text-decoration: underline;
         }
 
-        .table-action-btn {
-            min-width: 84px;
-            padding: 7px 10px;
-            font-size: 13px;
-        }
-
         .table-actions {
             display: flex;
-            gap: 8px;
+            justify-content: center;
+            gap: 6px;
         }
 
         .empty {
@@ -708,8 +726,9 @@
             background: rgba(255, 255, 255, 0.15);
             color: white;
             font-size: 32px;
-            line-height: 40px;
+            line-height: 45px;
             cursor: pointer;
+            padding: 0;
             z-index: 10000;
         }
 
@@ -833,6 +852,42 @@
             min-height: 126px;
             padding: 8px;
             line-height: 1.35;
+        }
+
+        .employee-card .ts-wrapper {
+            width: 100%;
+            font-size: 14px;
+        }
+
+        .employee-card .ts-control {
+            min-height: 38px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 5px 8px;
+            background: #ffffff;
+            box-shadow: none;
+        }
+
+        .employee-card .ts-wrapper.multi.has-items .ts-control {
+            padding: 5px 8px;
+        }
+
+        .employee-card .ts-wrapper.focus .ts-control {
+            border-color: var(--brand);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.17);
+        }
+
+        .employee-card .ts-dropdown {
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .employee-card .ts-dropdown .option {
+            padding: 8px 10px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
         }
 
         .edit-grid input[readonly],
@@ -961,6 +1016,8 @@
             }
         }
     </style>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css">
 </head>
 
 <body>
@@ -1027,18 +1084,18 @@
 
             <div class="dashboard-controls">
                 <div class="dashboard-mode-switch">
-                    <button id="dashboardDayModeBtn" type="button" class="dashboard-mode-btn active">Theo ngày</button>
-                    <button id="dashboardMonthModeBtn" type="button" class="dashboard-mode-btn">Theo tháng</button>
+                    <button id="dashboardDayModeBtn" type="button" class="dashboard-mode-btn">Theo ngày</button>
+                    <button id="dashboardMonthModeBtn" type="button" class="dashboard-mode-btn active">Theo tháng</button>
                 </div>
 
-                <div id="dashboardDayPanel" class="dashboard-mode-panel">
+                <div id="dashboardDayPanel" class="dashboard-mode-panel hidden">
                     <label>
                         Ngày:
                         <input id="dashboardDay" type="date">
                     </label>
                 </div>
 
-                <div id="dashboardMonthPanel" class="dashboard-mode-panel hidden">
+                <div id="dashboardMonthPanel" class="dashboard-mode-panel">
                     <label>
                         Tháng:
                         <input id="dashboardMonth" type="month">
@@ -1103,22 +1160,7 @@
             </div>
 
             <div class="dashboard-grid">
-                <article id="dailyStatsCard" class="dash-card">
-                    <h3 id="dailySummary">Theo ngày</h3>
-                    <div class="dash-cols">
-                        <div>
-                            <h4>Người đóng</h4>
-                            <div id="dailyPackerStats" class="stats-table"></div>
-                        </div>
-
-                        <div>
-                            <h4>Người giao</h4>
-                            <div id="dailyDelivererStats" class="stats-table"></div>
-                        </div>
-                    </div>
-                </article>
-
-                <article id="monthlyStatsCard" class="dash-card hidden">
+                <article id="monthlyStatsCard" class="dash-card">
                     <h3 id="monthlySummary">Theo tháng</h3>
                     <div class="dash-cols">
                         <div>
@@ -1129,6 +1171,21 @@
                         <div>
                             <h4>Người giao</h4>
                             <div id="monthlyDelivererStats" class="stats-table"></div>
+                        </div>
+                    </div>
+                </article>
+
+                <article id="dailyStatsCard" class="dash-card hidden">
+                    <h3 id="dailySummary">Theo ngày</h3>
+                    <div class="dash-cols">
+                        <div>
+                            <h4>Người đóng</h4>
+                            <div id="dailyPackerStats" class="stats-table"></div>
+                        </div>
+
+                        <div>
+                            <h4>Người giao</h4>
+                            <div id="dailyDelivererStats" class="stats-table"></div>
                         </div>
                     </div>
                 </article>
@@ -1267,6 +1324,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 
 <script>
     const SUPABASE_URL = "https://jaolqnqxmpllpmgewlfg.supabase.co";
@@ -1289,7 +1347,7 @@
         realtimeChannel: null,
         realtimeTimer: null,
         lastRealtimeStamp: "",
-        dashboardMode: "day",
+        dashboardMode: "month",
         dashboardExplode: false,
         editingOrderId: "",
         charts: {
@@ -1414,26 +1472,21 @@
             return "";
         }
 
-        const hyphenDate = textValue.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T\s].*)?$/);
-        if (hyphenDate) {
-            const year = Number(hyphenDate[1]);
-            const secondPart = Number(hyphenDate[2]);
-            const thirdPart = Number(hyphenDate[3]);
-
-            // Nguồn orders hiện đang lưu OrderDate theo yyyy-dd-mm.
-            if (isValidDateParts(year, thirdPart, secondPart)) {
-                return `${year}-${pad2(thirdPart)}-${pad2(secondPart)}`;
-            }
-
-            // Fallback cho các bản ghi đã đúng yyyy-mm-dd.
-            if (isValidDateParts(year, secondPart, thirdPart)) {
-                return `${year}-${pad2(secondPart)}-${pad2(thirdPart)}`;
-            }
-
+        // Cố định input OrderDate từ bảng orders theo định dạng dd/MM/yyyy.
+        const dmyDate = textValue.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (!dmyDate) {
             return "";
         }
 
-        return normalizeDateKey(textValue);
+        const day = Number(dmyDate[1]);
+        const month = Number(dmyDate[2]);
+        const year = Number(dmyDate[3]);
+
+        if (!isValidDateParts(year, month, day)) {
+            return "";
+        }
+
+        return `${year}-${pad2(month)}-${pad2(day)}`;
     }
 
     function toOrdersSourceDate(value) {
@@ -1477,6 +1530,29 @@
 
         const [year, month, day] = iso.split("-");
         return `${day}/${month}/${year}`;
+    }
+
+    function formatDateTime(value) {
+        if (!value) {
+            return "-";
+        }
+
+        let date = null;
+
+        if (value instanceof Date && !Number.isNaN(value.getTime())) {
+            date = value;
+        } else {
+            const timestamp = Date.parse(String(value));
+            if (!Number.isNaN(timestamp)) {
+                date = new Date(timestamp);
+            }
+        }
+
+        if (!date) {
+            return "-";
+        }
+
+        return `${pad2(date.getDate())}/${pad2(date.getMonth() + 1)}/${date.getFullYear()} ${pad2(date.getHours())}:${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`;
     }
 
     function formatMonth(value) {
@@ -1712,7 +1788,9 @@
         content.appendChild(createInfoRow("📦 Số kiện:", String(order.QuantitySK ?? "-"), false));
         content.appendChild(createInfoRow("👷 Người đóng:", order.PackerND || "-", false));
         content.appendChild(createInfoRow("🚚 Người giao:", order.DelivererNG || "-", false));
-        content.appendChild(createInfoRow("Trạng thái:", order.Status || "-", true));
+        content.appendChild(createInfoRow("🏷️ Trạng thái:", order.Status || "-", true));
+        content.appendChild(createInfoRow("💬 Telegram:", order.TelegramUsername || "-", false));
+        content.appendChild(createInfoRow("🕒 Chat lúc:", formatDateTime(order.CreatedAt), false));
 
         const actions = document.createElement("div");
         actions.className = "card-actions";
@@ -1720,7 +1798,9 @@
         const editButton = document.createElement("button");
         editButton.type = "button";
         editButton.className = "secondary edit-btn";
-        editButton.textContent = "Sửa đơn";
+        editButton.textContent = "✏️";
+        editButton.title = "Sửa đơn";
+        editButton.setAttribute("aria-label", "Sửa đơn");
         editButton.addEventListener("click", () => {
             openEditModal(order);
         });
@@ -1728,7 +1808,9 @@
         const deleteButton = document.createElement("button");
         deleteButton.type = "button";
         deleteButton.className = "danger delete-btn";
-        deleteButton.textContent = "Xóa";
+        deleteButton.textContent = "🗑️";
+        deleteButton.title = "Xóa đơn";
+        deleteButton.setAttribute("aria-label", "Xóa đơn");
         deleteButton.addEventListener("click", async () => {
             await deleteOrder(order);
         });
@@ -1831,7 +1913,9 @@
             const editButton = document.createElement("button");
             editButton.type = "button";
             editButton.className = "secondary table-action-btn";
-            editButton.textContent = "Sửa";
+            editButton.textContent = "✏️";
+            editButton.title = "Sửa đơn";
+            editButton.setAttribute("aria-label", "Sửa đơn");
             editButton.addEventListener("click", () => {
                 openEditModal(order);
             });
@@ -1839,7 +1923,9 @@
             const deleteButton = document.createElement("button");
             deleteButton.type = "button";
             deleteButton.className = "danger table-action-btn";
-            deleteButton.textContent = "Xóa";
+            deleteButton.textContent = "🗑️";
+            deleteButton.title = "Xóa đơn";
+            deleteButton.setAttribute("aria-label", "Xóa đơn");
             deleteButton.addEventListener("click", async () => {
                 await deleteOrder(order);
             });
@@ -2440,6 +2526,54 @@
         return [];
     }
 
+    function getEmployeeSelectValues(select) {
+        if (!select) {
+            return [];
+        }
+
+        if (select.tomselect && Array.isArray(select.tomselect.items)) {
+            return select.tomselect.items
+                .map((value) => String(value))
+                .filter(Boolean);
+        }
+
+        return Array.from(select.selectedOptions)
+            .map((option) => option.value)
+            .filter(Boolean);
+    }
+
+    function destroyEmployeeSelectWidget(select) {
+        if (select && select.tomselect) {
+            select.tomselect.destroy();
+        }
+    }
+
+    function initEmployeeSelectWidget(select) {
+        if (!select || typeof TomSelect === "undefined") {
+            return;
+        }
+
+        destroyEmployeeSelectWidget(select);
+
+        new TomSelect(select, {
+            plugins: ["remove_button", "checkbox_options"],
+            create: false,
+            closeAfterSelect: false,
+            hideSelected: false,
+            maxOptions: null,
+            placeholder: "Chọn một hoặc nhiều employee"
+        });
+    }
+
+    function syncEmployeeSelectWidget(select) {
+        if (!select || !select.tomselect) {
+            return;
+        }
+
+        select.tomselect.sync();
+        select.tomselect.refreshOptions(false);
+    }
+
     function renderEmployeeSelectOptions() {
         const selectIds = ["editPackerEmployee", "editDelivererEmployee"];
 
@@ -2449,9 +2583,9 @@
                 continue;
             }
 
-            const selectedIds = Array.from(select.selectedOptions)
-                .map((option) => option.value)
-                .filter(Boolean);
+            const selectedIds = getEmployeeSelectValues(select);
+
+            destroyEmployeeSelectWidget(select);
 
             select.innerHTML = "";
 
@@ -2462,6 +2596,8 @@
                 option.selected = selectedIds.includes(option.value);
                 select.appendChild(option);
             }
+
+            initEmployeeSelectWidget(select);
         }
 
         const hint = byId("editEmployeeHint");
@@ -2470,7 +2606,7 @@
             return;
         }
 
-        hint.textContent = `Đã tải ${state.employees.length} employee. Có thể chọn nhiều (giu Ctrl/Command), hệ thống lưu dạng name1 + name2, code1 + code2. Bo chon het để nhập tay.`;
+        hint.textContent = `Đã tải ${state.employees.length} employee. Có thể chọn nhiều theo dạng checkbox, hệ thống lưu dạng name1 + name2, code1 + code2. Bỏ chọn hết để nhập tay.`;
     }
 
     function splitMultiEmployeeValue(value) {
@@ -2507,9 +2643,7 @@
             return [];
         }
 
-        const selectedIds = Array.from(select.selectedOptions)
-            .map((option) => option.value)
-            .filter(Boolean);
+        const selectedIds = getEmployeeSelectValues(select);
 
         const selectedEmployees = [];
 
@@ -2584,6 +2718,8 @@
         for (const option of select.options) {
             option.selected = matchedIds.has(option.value);
         }
+
+        syncEmployeeSelectWidget(select);
 
         applyEmployeeFromSelect(role);
     }
@@ -2669,9 +2805,15 @@
         for (const role of ["packer", "deliverer"]) {
             const { select } = getEmployeeEditorFields(role);
             if (select) {
+                if (select.tomselect) {
+                    select.tomselect.clear(true);
+                }
+
                 for (const option of select.options) {
                     option.selected = false;
                 }
+
+                syncEmployeeSelectWidget(select);
             }
             setEmployeeInputsReadonly(role, false);
         }
@@ -3255,7 +3397,7 @@
         byId("dashboardMonth").value = `${today.getFullYear()}-${pad2(today.getMonth() + 1)}`;
         byId("dashboardExplodeToggle").checked = false;
         state.dashboardExplode = false;
-        setDashboardMode("day");
+        setDashboardMode("month");
 
         if (!supabaseClient) {
             setLoginMessage("Không tải được thư viện Supabase.", true);
