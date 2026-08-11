@@ -1,288 +1,3281 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hệ thống Quản lý Đơn hàng - Supabase</title>
-  
-  <!-- 1. Content Security Policy (CSP) chống XSS trên GitHub Pages -->
-  <meta http-equiv="Content-Security-Policy" 
-        content="default-src 'self'; 
-                 script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; 
-                 style-src 'self' 'unsafe-inline'; 
-                 connect-src 'self' https://*.supabase.co;">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders Dashboard</title>
 
-  <!-- 2. Nhúng Supabase JS SDK từ CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg: #f5f6f8;
+            --panel: #ffffff;
+            --text: #222;
+            --muted: #64748b;
+            --brand: #2563eb;
+            --brand-hover: #1d4ed8;
+            --danger: #dc2626;
+            --border: #e5e7eb;
+            --header: #111827;
+        }
 
-  <style>
-    :root {
-      --primary: #3ecf8e;
-      --bg: #121212;
-      --card-bg: #1e1e1e;
-      --text: #ffffff;
-      --text-sub: #a0a0a0;
-      --border: #333333;
-    }
+        * {
+            box-sizing: border-box;
+        }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      justify-content: center;
-    }
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
 
-    .container {
-      width: 100%;
-      max-width: 900px;
-    }
+        .header {
+            background: var(--header);
+            color: white;
+            padding: 18px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
 
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 24px;
-      margin-bottom: 20px;
-    }
+        .header h1 {
+            margin: 0;
+            font-size: 20px;
+        }
 
-    h2, h3 { margin-top: 0; }
-    
-    input {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0 16px 0;
-      background: #2a2a2a;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      color: white;
-      box-sizing: border-box;
-    }
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
 
-    button {
-      background: var(--primary);
-      color: black;
-      font-weight: bold;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 4px;
-      cursor: pointer;
-      width: 100%;
-    }
+        .user-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 7px 12px;
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
+            font-size: 13px;
+            color: #e5e7eb;
+        }
 
-    button:hover { opacity: 0.9; }
-    .btn-logout { background: #e53e3e; color: white; width: auto; margin-top: 10px; }
+        button {
+            border: 0;
+            background: var(--brand);
+            color: white;
+            padding: 9px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
 
-    .hidden { display: none !important; }
+        button:hover {
+            background: var(--brand-hover);
+        }
 
-    /* Table Styling */
-    .table-container { overflow-x: auto; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-      text-align: left;
-    }
+        button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
 
-    th, td {
-      padding: 12px;
-      border-bottom: 1px solid var(--border);
-      font-size: 14px;
-    }
+        button.secondary {
+            background: #334155;
+        }
 
-    th { background: #252525; color: var(--text-sub); }
-    tr:hover { background: #2a2a2a; }
+        button.secondary:hover {
+            background: #1e293b;
+        }
 
-    .status-badge {
-      padding: 4px 8px;
-      border-radius: 12px;
-      font-size: 12px;
-      background: #333;
-      color: #fff;
-    }
-  </style>
+        button.danger {
+            background: var(--danger);
+        }
+
+        button.danger:hover {
+            background: #b91c1c;
+        }
+
+        .container {
+            max-width: 1500px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .login-panel {
+            max-width: 500px;
+            margin: 40px auto;
+            background: var(--panel);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .login-panel h2 {
+            margin: 0 0 14px;
+            font-size: 22px;
+        }
+
+        .login-form {
+            display: grid;
+            gap: 12px;
+        }
+
+        .login-form label {
+            display: grid;
+            gap: 6px;
+            font-size: 14px;
+            color: #334155;
+            font-weight: 600;
+        }
+
+        .login-form input {
+            width: 100%;
+            height: 40px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0 12px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .login-form input:focus {
+            border-color: var(--brand);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+        }
+
+        .login-message {
+            margin: 12px 0 0;
+            min-height: 20px;
+            font-size: 14px;
+        }
+
+        .login-message.error-text {
+            color: #b91c1c;
+        }
+
+        .login-message.ok-text {
+            color: #166534;
+        }
+
+        .status-bar {
+            margin-bottom: 14px;
+            color: #334155;
+            font-weight: 600;
+        }
+
+        .toolbar {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .filters {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            flex: 1;
+        }
+
+        .filters input,
+        .filters select {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            height: 40px;
+            padding: 0 10px;
+            font-size: 14px;
+            outline: none;
+            background: white;
+        }
+
+        .filters input:focus,
+        .filters select:focus {
+            border-color: var(--brand);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.17);
+        }
+
+        #searchInput {
+            min-width: 310px;
+            flex: 1;
+        }
+
+        .view-switch {
+            display: flex;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            overflow: hidden;
+        }
+
+        .view-switch .toggle {
+            border-radius: 0;
+            border-right: 1px solid var(--border);
+            background: white;
+            color: #0f172a;
+            min-width: 92px;
+            font-weight: 700;
+        }
+
+        .view-switch .toggle:last-child {
+            border-right: none;
+        }
+
+        .view-switch .toggle.active {
+            background: #0f172a;
+            color: white;
+        }
+
+        .dashboard {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--panel);
+            padding: 14px;
+            margin-bottom: 18px;
+        }
+
+        .dashboard-head h2 {
+            margin: 0;
+            font-size: 19px;
+        }
+
+        .dashboard-head p {
+            margin: 8px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .dashboard-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 14px 0;
+            align-items: center;
+        }
+
+        .dashboard-mode-switch {
+            display: inline-flex;
+            border: 1px solid #cbd5e1;
+            border-radius: 9px;
+            overflow: hidden;
+            background: white;
+        }
+
+        .dashboard-mode-btn {
+            border-radius: 0;
+            background: white;
+            color: #0f172a;
+            min-width: 130px;
+            border-right: 1px solid #cbd5e1;
+            font-weight: 700;
+        }
+
+        .dashboard-mode-btn:last-child {
+            border-right: none;
+        }
+
+        .dashboard-mode-btn.active {
+            background: #0f172a;
+            color: white;
+        }
+
+        .dashboard-mode-btn:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
+        .dashboard-mode-btn.active:hover {
+            background: #0f172a;
+            color: white;
+        }
+
+        .dashboard-mode-panel {
+            display: inline-flex;
+        }
+
+        .dashboard-explode-toggle {
+            display: inline-flex;
+            align-items: flex-start;
+            gap: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            padding: 8px 12px;
+            color: #0f172a;
+            min-height: 40px;
+            cursor: pointer;
+            user-select: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+
+        .dashboard-explode-toggle:hover {
+            border-color: #93c5fd;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+        }
+
+        .dashboard-explode-text {
+            display: grid;
+            gap: 2px;
+            line-height: 1.2;
+        }
+
+        .dashboard-explode-title {
+            color: #0f172a;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .dashboard-explode-desc {
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .dashboard-explode-toggle input {
+            width: 16px;
+            height: 16px;
+            accent-color: #2563eb;
+            margin: 1px 0 0;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .dashboard-controls label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #334155;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .dashboard-controls input[type="date"],
+        .dashboard-controls input[type="month"] {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            height: 38px;
+            padding: 0 10px;
+            outline: none;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .kpi-card {
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+
+        .kpi-label {
+            margin: 0;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .kpi-value {
+            margin: 6px 0 0;
+            color: #0f172a;
+            font-size: 28px;
+            font-weight: 800;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        .chart-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            background: #ffffff;
+            padding: 12px;
+        }
+
+        .chart-card.wide {
+            grid-column: 1 / -1;
+        }
+
+        .chart-card h3 {
+            margin: 0 0 10px;
+            font-size: 15px;
+            color: #1f2937;
+        }
+
+        .chart-canvas-wrap {
+            position: relative;
+            height: 280px;
+        }
+
+        .chart-empty {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            border: 1px dashed #cbd5e1;
+            border-radius: 8px;
+            font-size: 13px;
+            background: #f8fafc;
+            text-align: center;
+            padding: 8px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .dash-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 12px;
+        }
+
+        .dash-card h3 {
+            margin: 0 0 10px;
+            font-size: 16px;
+        }
+
+        .dash-cols {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .dash-cols h4 {
+            margin: 0 0 6px;
+            font-size: 14px;
+            color: #1f2937;
+        }
+
+        .stats-empty {
+            font-size: 13px;
+            color: var(--muted);
+            padding: 8px;
+            text-align: center;
+            border: 1px dashed #cbd5e1;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .mini-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .mini-table th,
+        .mini-table td {
+            padding: 6px 8px;
+            text-align: left;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13px;
+        }
+
+        .mini-table th {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .orders {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 18px;
+        }
+
+        .order-card {
+            background: var(--panel);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+            border: 1px solid #e2e8f0;
+        }
+
+        .order-image {
+            width: 100%;
+            height: 230px;
+            object-fit: cover;
+            background: #eee;
+            display: block;
+            cursor: pointer;
+        }
+
+        .order-content {
+            padding: 16px;
+        }
+
+        .order-code {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .card-actions {
+            margin-top: 12px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .edit-btn {
+            flex: 1;
+        }
+
+        .delete-btn {
+            flex: 1;
+        }
+
+        .row {
+            display: flex;
+            margin: 7px 0;
+            gap: 8px;
+        }
+
+        .label {
+            width: 120px;
+            color: #777;
+            flex-shrink: 0;
+        }
+
+        .value {
+            font-weight: 500;
+            min-width: 0;
+            word-wrap: break-word;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 9px;
+            border-radius: 20px;
+            font-size: 12px;
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .status.completed {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status.processing {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status.failed {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status.unknown {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .table-wrap {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: auto;
+            background: white;
+        }
+
+        .orders-table {
+            width: 100%;
+            min-width: 1240px;
+            border-collapse: collapse;
+        }
+
+        .orders-table th,
+        .orders-table td {
+            padding: 10px;
+            border-bottom: 1px solid #f1f5f9;
+            text-align: left;
+            vertical-align: middle;
+            font-size: 14px;
+        }
+
+        .orders-table th {
+            position: sticky;
+            top: 0;
+            background: #f8fafc;
+            color: #334155;
+            z-index: 1;
+        }
+
+        .orders-table td.strong {
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .table-empty {
+            text-align: center;
+            padding: 22px;
+            color: var(--muted);
+        }
+
+        .link-btn {
+            border: none;
+            background: transparent;
+            color: var(--brand);
+            cursor: pointer;
+            padding: 0;
+            font-weight: 700;
+        }
+
+        .link-btn:hover {
+            color: var(--brand-hover);
+            text-decoration: underline;
+        }
+
+        .table-action-btn {
+            min-width: 84px;
+            padding: 7px 10px;
+            font-size: 13px;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 50px;
+            color: #777;
+            background: white;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+        }
+
+        .image-modal.show {
+            display: flex;
+        }
+
+        .image-modal img {
+            max-width: 95vw;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .image-modal-close {
+            position: fixed;
+            top: 15px;
+            right: 25px;
+            width: 45px;
+            height: 45px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-size: 32px;
+            line-height: 40px;
+            cursor: pointer;
+            z-index: 10000;
+        }
+
+        .image-modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .image-modal-caption {
+            position: fixed;
+            bottom: 15px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: white;
+            font-size: 14px;
+        }
+
+        .edit-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 10001;
+            background: rgba(15, 23, 42, 0.62);
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+        }
+
+        .edit-modal.show {
+            display: flex;
+        }
+
+        .edit-dialog {
+            width: 100%;
+            max-width: 980px;
+            max-height: 90vh;
+            overflow: auto;
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 14px 50px rgba(2, 6, 23, 0.25);
+        }
+
+        .edit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            background: #ffffff;
+            z-index: 2;
+        }
+
+        .edit-header h3 {
+            margin: 0;
+            font-size: 18px;
+            color: #0f172a;
+        }
+
+        .close-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 999px;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #1e293b;
+            font-size: 24px;
+            line-height: 1;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .close-btn:hover {
+            background: #f8fafc;
+        }
+
+        .edit-form {
+            padding: 14px 16px 16px;
+            display: grid;
+            gap: 14px;
+        }
+
+        .edit-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .edit-grid label,
+        .employee-card label {
+            display: grid;
+            gap: 6px;
+            color: #334155;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .edit-grid input,
+        .edit-grid select,
+        .employee-card input,
+        .employee-card select {
+            height: 38px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 0 10px;
+            outline: none;
+            background: #ffffff;
+            font-size: 14px;
+            color: #0f172a;
+        }
+
+        .edit-grid select[multiple],
+        .employee-card select[multiple] {
+            height: auto;
+            min-height: 126px;
+            padding: 8px;
+            line-height: 1.35;
+        }
+
+        .edit-grid input[readonly],
+        .employee-card input[readonly] {
+            background: #f1f5f9;
+            color: #475569;
+            cursor: not-allowed;
+        }
+
+        .edit-grid input:focus,
+        .edit-grid select:focus,
+        .employee-card input:focus,
+        .employee-card select:focus {
+            border-color: var(--brand);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.17);
+        }
+
+        .employee-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .employee-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px;
+            background: #f8fafc;
+            display: grid;
+            gap: 8px;
+        }
+
+        .employee-card h4 {
+            margin: 0;
+            font-size: 15px;
+            color: #0f172a;
+        }
+
+        .edit-hint {
+            margin: 0;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .edit-message {
+            margin: 0;
+            min-height: 20px;
+            font-size: 14px;
+        }
+
+        .edit-message.error-text {
+            color: #b91c1c;
+        }
+
+        .edit-message.ok-text {
+            color: #166534;
+        }
+
+        .edit-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 6px;
+        }
+
+        @media (max-width: 980px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-card.wide {
+                grid-column: auto;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dash-cols {
+                grid-template-columns: 1fr;
+            }
+
+            .edit-grid,
+            .employee-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .container {
+                padding: 0 12px;
+            }
+
+            .dashboard-explode-toggle {
+                width: 100%;
+            }
+
+            #searchInput {
+                min-width: 100%;
+            }
+
+            .view-switch {
+                width: 100%;
+            }
+
+            .view-switch .toggle {
+                flex: 1;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .header {
+                padding: 15px;
+            }
+
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .orders {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
+
 <body>
+<header class="header">
+    <h1>📦 Danh sách đơn hàng</h1>
 
-  <div class="container">
-    
-    <!-- KHỐI ĐĂNG NHẬP -->
-    <div id="login-section" class="card">
-      <h2>Đăng nhập Hệ thống</h2>
-      <form id="login-form">
-        <label for="email">Email</label>
-        <input type="email" id="email" required placeholder="name@example.com">
-        
-        <label for="password">Mật khẩu</label>
-        <input type="password" id="password" required placeholder="••••••••">
-        
-        <button type="submit" id="btn-login">Đăng nhập</button>
-      </form>
-      <p id="error-msg" style="color: #ff6b6b; font-size: 14px; margin-top: 10px;"></p>
+    <div class="header-actions">
+        <span id="currentUser" class="user-badge">Chưa đăng nhập</span>
+        <button id="refreshBtn" type="button" disabled>🔄 Làm mới</button>
+        <button id="exportBtn" type="button" disabled>⬇️ Tải Excel</button>
+        <button id="logoutBtn" type="button" class="danger" disabled>Đăng xuất</button>
     </div>
+</header>
 
-    <!-- KHỐI DASHBOARD / DATA -->
-    <div id="dashboard-section" class="card hidden">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <div>
-          <h3>Danh sách Đơn hàng</h3>
-          <small style="color: var(--text-sub)">Xin chào: <span id="user-email"></span></small>
+<div class="container">
+    <section id="loginPanel" class="login-panel">
+        <h2>Đăng nhập Supabase</h2>
+
+        <form id="loginForm" class="login-form">
+            <label>
+                Email
+                <input id="emailInput" type="email" autocomplete="username" required>
+            </label>
+
+            <label>
+                Mật khẩu
+                <input id="passwordInput" type="password" autocomplete="current-password" required>
+            </label>
+
+            <button id="loginBtn" type="submit">Đăng nhập</button>
+        </form>
+
+        <p id="loginMessage" class="login-message"></p>
+    </section>
+
+    <section id="appPanel" class="hidden">
+        <div id="status" class="status-bar">Đang khởi tạo...</div>
+
+        <div class="toolbar">
+            <div class="filters">
+                <input id="searchInput" type="search" placeholder="Tìm theo mã đơn, khách hàng, người đóng, người giao...">
+
+                <select id="statusFilter">
+                    <option value="">Tất cả trạng thái</option>
+                </select>
+
+                <input id="dateFrom" type="date" title="Từ ngày">
+                <input id="dateTo" type="date" title="Đến ngày">
+
+                <button id="clearFiltersBtn" type="button" class="secondary">Xóa lọc</button>
+            </div>
+
+            <div class="view-switch">
+                <button id="gridViewBtn" type="button" class="toggle active">Grid</button>
+                <button id="tableViewBtn" type="button" class="toggle">Table</button>
+            </div>
         </div>
-        <button onclick="logout()" class="btn-logout">Đăng xuất</button>
-      </div>
 
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Ngày</th>
-              <th>Khách hàng</th>
-              <th>Sản phẩm</th>
-              <th>SL</th>
-              <th>ĐVT</th>
-              <th>Trạng thái</th>
-            </tr>
-          </thead>
-          <tbody id="data-table-body">
-            <!-- Dữ liệu sẽ render ở đây -->
-          </tbody>
-        </table>
-      </div>
+        <section class="dashboard">
+            <div class="dashboard-head">
+                <h2>Dashboard theo người đóng và người giao</h2>
+                <p>Dữ liệu dashboard tự động cập nhật theo bộ lọc hiện tại và realtime.</p>
+            </div>
+
+            <div class="dashboard-controls">
+                <div class="dashboard-mode-switch">
+                    <button id="dashboardDayModeBtn" type="button" class="dashboard-mode-btn active">Theo ngày</button>
+                    <button id="dashboardMonthModeBtn" type="button" class="dashboard-mode-btn">Theo tháng</button>
+                </div>
+
+                <div id="dashboardDayPanel" class="dashboard-mode-panel">
+                    <label>
+                        Ngày:
+                        <input id="dashboardDay" type="date">
+                    </label>
+                </div>
+
+                <div id="dashboardMonthPanel" class="dashboard-mode-panel hidden">
+                    <label>
+                        Tháng:
+                        <input id="dashboardMonth" type="month">
+                    </label>
+                </div>
+
+                <label class="dashboard-explode-toggle">
+                    <input id="dashboardExplodeToggle" type="checkbox">
+                    <span class="dashboard-explode-text">
+                        <span class="dashboard-explode-title">Tách người theo dấu +</span>
+                        <span class="dashboard-explode-desc">Ví dụ: DUNG + VĨ sẽ tính thành 2 đơn riêng.</span>
+                    </span>
+                </label>
+            </div>
+
+            <div class="kpi-grid">
+                <article class="kpi-card">
+                    <p class="kpi-label">Tổng đơn đang hiển thị</p>
+                    <p id="kpiTotalOrders" class="kpi-value">0</p>
+                </article>
+
+                <article class="kpi-card">
+                    <p class="kpi-label">Hoàn thành</p>
+                    <p id="kpiCompleted" class="kpi-value">0</p>
+                </article>
+
+                <article class="kpi-card">
+                    <p class="kpi-label">Đang xử lý</p>
+                    <p id="kpiProcessing" class="kpi-value">0</p>
+                </article>
+
+                <article class="kpi-card">
+                    <p class="kpi-label">Thất bại</p>
+                    <p id="kpiFailed" class="kpi-value">0</p>
+                </article>
+            </div>
+
+            <div class="charts-grid">
+                <article class="chart-card">
+                    <h3>Phân bổ trạng thái</h3>
+                    <div class="chart-canvas-wrap">
+                        <canvas id="statusPieChart"></canvas>
+                        <div id="statusPieEmpty" class="chart-empty hidden">Không có dữ liệu để vẽ biểu đồ trạng thái.</div>
+                    </div>
+                </article>
+
+                <article class="chart-card">
+                    <h3>Top nhân sự theo số đơn</h3>
+                    <div class="chart-canvas-wrap">
+                        <canvas id="staffBarChart"></canvas>
+                        <div id="staffBarEmpty" class="chart-empty hidden">Không có dữ liệu để vẽ biểu đồ nhân sự.</div>
+                    </div>
+                </article>
+
+                <article class="chart-card wide">
+                    <h3 id="trendLineTitle">Xu hướng đơn theo tháng đã chọn </h3>
+                    <div class="chart-canvas-wrap">
+                        <canvas id="trendLineChart"></canvas>
+                        <div id="trendLineEmpty" class="chart-empty hidden">Chưa có dữ liệu theo tháng để vẽ xu hướng.</div>
+                    </div>
+                </article>
+            </div>
+
+            <div class="dashboard-grid">
+                <article id="dailyStatsCard" class="dash-card">
+                    <h3 id="dailySummary">Theo ngày</h3>
+                    <div class="dash-cols">
+                        <div>
+                            <h4>Người đóng</h4>
+                            <div id="dailyPackerStats" class="stats-table"></div>
+                        </div>
+
+                        <div>
+                            <h4>Người giao</h4>
+                            <div id="dailyDelivererStats" class="stats-table"></div>
+                        </div>
+                    </div>
+                </article>
+
+                <article id="monthlyStatsCard" class="dash-card hidden">
+                    <h3 id="monthlySummary">Theo tháng</h3>
+                    <div class="dash-cols">
+                        <div>
+                            <h4>Người đóng</h4>
+                            <div id="monthlyPackerStats" class="stats-table"></div>
+                        </div>
+
+                        <div>
+                            <h4>Người giao</h4>
+                            <div id="monthlyDelivererStats" class="stats-table"></div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <div id="ordersGrid" class="orders"></div>
+
+        <div id="ordersTableWrap" class="table-wrap hidden">
+            <table class="orders-table">
+                <thead>
+                <tr>
+                    <th>Mã đơn</th>
+                    <th>Ngày</th>
+                    <th>Khách hàng</th>
+                    <th>Số kiện</th>
+                    <th>Người đóng</th>
+                    <th>Người giao</th>
+                    <th>Trạng thái</th>
+                    <th>Ảnh</th>
+                    <th>Tác vụ</th>
+                </tr>
+                </thead>
+                <tbody id="ordersTableBody"></tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<div id="imageModal" class="image-modal">
+    <button id="imageModalClose" class="image-modal-close" type="button">×</button>
+    <img id="modalImage" src="" alt="Order Image">
+    <div id="modalCaption" class="image-modal-caption"></div>
+</div>
+
+<div id="editModal" class="edit-modal">
+    <div class="edit-dialog" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+        <div class="edit-header">
+            <h3 id="editModalTitle">Chỉnh sửa đơn hàng</h3>
+            <button id="editModalClose" type="button" class="close-btn" aria-label="Đóng">×</button>
+        </div>
+
+        <form id="editOrderForm" class="edit-form">
+            <input id="editOrderId" type="hidden">
+
+            <div class="edit-grid">
+                <label>
+                    Mã đơn
+                    <input id="editOrderCode" type="text" placeholder="Nhập mã đơn">
+                </label>
+
+                <label>
+                    Ngày đơn
+                    <input id="editOrderDate" type="date">
+                </label>
+
+                <label>
+                    Khách hàng
+                    <input id="editCustomerName" type="text" placeholder="Tên khách hàng">
+                </label>
+
+                <label>
+                    Số kiện
+                    <input id="editQuantitySK" type="number" step="0.01" min="0" placeholder="0">
+                </label>
+
+                <label>
+                    Trạng thái
+                    <select id="editStatus" required>
+                        <option value="" selected disabled>Chọn trạng thái</option>
+                        <option value="ai_processing">ai_processing</option>
+                        <option value="completed">completed</option>
+                        <option value="failed">failed</option>
+                    </select>
+                </label>
+
+                <label>
+                    ImagePath
+                    <input id="editImagePath" type="text" placeholder="Đường dẫn ảnh (nếu có)" readonly>
+                </label>
+            </div>
+
+            <p id="editEmployeeHint" class="edit-hint"></p>
+
+            <div class="employee-grid">
+                <section class="employee-card">
+                    <h4>Người đóng</h4>
+
+                    <label>
+                        Chọn employee
+                        <select id="editPackerEmployee" multiple size="6"></select>
+                    </label>
+
+                    <label>
+                        Tên người đóng
+                        <input id="editPackerND" type="text" placeholder="Tên người đóng">
+                    </label>
+
+                    <label>
+                        Mã người đóng
+                        <input id="editPackerNDCode" type="text" placeholder="Mã người đóng">
+                    </label>
+                </section>
+
+                <section class="employee-card">
+                    <h4>Người giao</h4>
+
+                    <label>
+                        Chọn employee
+                        <select id="editDelivererEmployee" multiple size="6"></select>
+                    </label>
+
+                    <label>
+                        Tên người giao
+                        <input id="editDelivererNG" type="text" placeholder="Tên người giao">
+                    </label>
+
+                    <label>
+                        Mã người giao
+                        <input id="editDelivererNGCode" type="text" placeholder="Mã người giao">
+                    </label>
+                </section>
+            </div>
+
+            <p id="editMessage" class="edit-message"></p>
+
+            <div class="edit-actions">
+                <button id="editDeleteBtn" type="button" class="danger">Xóa order</button>
+                <button id="editCancelBtn" type="button" class="secondary">Hủy</button>
+                <button id="editSaveBtn" type="submit">Lưu cập nhật</button>
+            </div>
+        </form>
     </div>
+</div>
 
-  </div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
-  <script>
-    // ==========================================
-    // 1. CẤU HÌNH SUPABASE (Thay thông tin của bạn vào đây)
-    // ==========================================
-    const SUPABASE_URL = 'https://jaolqnqxmpllpmgewlfg.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imphb2xxbnF4bXBsbHBtZ2V3bGZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYzNjY0NTQsImV4cCI6MjEwMTk0MjQ1NH0.ZVUcyOwmta-kSPFmDJLKH-VMEyiTn8sQocGzkowQDrA';
+<script>
+    const SUPABASE_URL = "https://jaolqnqxmpllpmgewlfg.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_vBoZr89uwX6nNzm9Hr9Mnw_sXjxTfnT";
+    const TABLE_NAME = "orders";
+    const EMPLOYEE_TABLE = "employees";
+    const BUCKET_NAME = "order-images";
+    const ORDER_STATUSES = ["ai_processing", "completed", "failed"];
 
-    // Khởi tạo Supabase Client chuẩn bảo mật PKCE Flow cho GitHub Pages
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: {
-        flowType: 'pkce',
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true
-      }
-    });
+    const supabaseClient = window.supabase
+        ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+        : null;
 
-    const loginSection = document.getElementById('login-section');
-    const dashboardSection = document.getElementById('dashboard-section');
-    const loginForm = document.getElementById('login-form');
-    const errorMsg = document.getElementById('error-msg');
-    const dataTableBody = document.getElementById('data-table-body');
+    const state = {
+        session: null,
+        orders: [],
+        filteredOrders: [],
+        employees: [],
+        view: "grid",
+        realtimeChannel: null,
+        realtimeTimer: null,
+        lastRealtimeStamp: "",
+        dashboardMode: "day",
+        dashboardExplode: false,
+        editingOrderId: "",
+        charts: {
+            statusPie: null,
+            staffBar: null,
+            trendLine: null
+        }
+    };
 
-    // ==========================================
-    // 2. XỬ LÝ ĐĂNG NHẬP
-    // ==========================================
-    loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      errorMsg.textContent = '';
-      
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
+    function byId(id) {
+        return document.getElementById(id);
+    }
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+    function pad2(value) {
+        return String(value).padStart(2, "0");
+    }
 
-      if (error) {
-        errorMsg.textContent = 'Đăng nhập thất bại: ' + error.message;
-      } else {
-        checkAuthSession();
-      }
-    });
+    function toIsoDate(dateObject) {
+        return `${dateObject.getFullYear()}-${pad2(dateObject.getMonth() + 1)}-${pad2(dateObject.getDate())}`;
+    }
 
-    // ==========================================
-    // 3. LẤY DỮ LIỆU TỪ BẢNG 'orders'
-    // ==========================================
-    async function fetchOrdersData() {
-      dataTableBody.innerHTML = '<tr><td colspan="7" style="text-align:center">Đang tải dữ liệu...</td></tr>';
+    function isValidDateParts(year, month, day) {
+        if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
+            return false;
+        }
 
-      // Query lấy danh sách đơn hàng mới nhất
-      const { data, error } = await supabase
-        .from('orders')
-        .select('ID, OrderDate, CustomerName, Product, Quantity, Unit, Status')
-        .order('ID', { ascending: false });
+        if (month < 1 || month > 12 || day < 1 || day > 31) {
+            return false;
+        }
 
-      if (error) {
-        console.error('Lỗi lấy data:', error);
-        dataTableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#ff6b6b">Lỗi: ${error.message}</td></tr>`;
-        return;
-      }
+        const date = new Date(year, month - 1, day);
 
-      dataTableBody.innerHTML = '';
+        return date.getFullYear() === year
+            && date.getMonth() === month - 1
+            && date.getDate() === day;
+    }
 
-      if (!data || data.length === 0) {
-        dataTableBody.innerHTML = '<tr><td colspan="7" style="text-align:center">Chưa có dữ liệu nào.</td></tr>';
-        return;
-      }
+    function normalizeDateKey(value) {
+        if (!value) {
+            return "";
+        }
 
-      // Render dữ liệu an toàn (Chống XSS) bằng textContent
-      data.forEach(item => {
-        const tr = document.createElement('tr');
+        if (value instanceof Date && !Number.isNaN(value.getTime())) {
+            return toIsoDate(value);
+        }
 
-        const fields = [
-          item.ID || '',
-          item.OrderDate || '',
-          item.CustomerName || 'N/A',
-          item.Product || '',
-          item.Quantity || 0,
-          item.Unit || '',
-          item.Status || 'pending'
-        ];
+        if (typeof value === "string") {
+            const textValue = value.trim();
 
-        fields.forEach((text, index) => {
-          const td = document.createElement('td');
-          if (index === 6) { // Trường Status
-            const badge = document.createElement('span');
-            badge.className = 'status-badge';
-            badge.textContent = text;
-            td.appendChild(badge);
-          } else {
-            td.textContent = text;
-          }
-          tr.appendChild(td);
+            // yyyy-mm-dd hoặc yyyy-mm-ddTHH:mm:ss
+            const isoLike = textValue.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T\s].*)?$/);
+            if (isoLike) {
+                const year = Number(isoLike[1]);
+                const month = Number(isoLike[2]);
+                const day = Number(isoLike[3]);
+
+                if (isValidDateParts(year, month, day)) {
+                    return `${year}-${pad2(month)}-${pad2(day)}`;
+                }
+            }
+
+            // Supabase trả về mm/dd/yyyy (có thể kèm time phía sau).
+            // Nếu giá trị đầu > 12 thì coi là dd/mm/yyyy để tránh ngày không hợp lệ.
+            const slashDate = textValue.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[^\d].*)?$/);
+            if (slashDate) {
+                let first = Number(slashDate[1]);
+                let second = Number(slashDate[2]);
+                const year = Number(slashDate[3]);
+
+                let month = first;
+                let day = second;
+
+                if (first > 12 && second <= 12) {
+                    day = first;
+                    month = second;
+                }
+
+                if (isValidDateParts(year, month, day)) {
+                    return `${year}-${pad2(month)}-${pad2(day)}`;
+                }
+            }
+
+            // Một số nguồn có dạng yyyy/mm/dd.
+            const ymdSlash = textValue.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})(?:[^\d].*)?$/);
+            if (ymdSlash) {
+                const year = Number(ymdSlash[1]);
+                const month = Number(ymdSlash[2]);
+                const day = Number(ymdSlash[3]);
+
+                if (isValidDateParts(year, month, day)) {
+                    return `${year}-${pad2(month)}-${pad2(day)}`;
+                }
+            }
+
+            // Fallback cho chuỗi có month-name; tránh parse mơ hồ cho chuỗi có '/'.
+            if (!textValue.includes("/")) {
+                const timestamp = Date.parse(textValue);
+                if (!Number.isNaN(timestamp)) {
+                    const date = new Date(timestamp);
+                    return toIsoDate(date);
+                }
+            }
+
+            return "";
+        }
+
+        const timestamp = Date.parse(String(value));
+        if (Number.isNaN(timestamp)) {
+            return "";
+        }
+
+        return toIsoDate(new Date(timestamp));
+    }
+
+    function normalizeOrderDateFromOrders(value) {
+        if (!value) {
+            return "";
+        }
+
+        const textValue = String(value).trim();
+        if (!textValue) {
+            return "";
+        }
+
+        const hyphenDate = textValue.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T\s].*)?$/);
+        if (hyphenDate) {
+            const year = Number(hyphenDate[1]);
+            const secondPart = Number(hyphenDate[2]);
+            const thirdPart = Number(hyphenDate[3]);
+
+            // Nguồn orders hiện đang lưu OrderDate theo yyyy-dd-mm.
+            if (isValidDateParts(year, thirdPart, secondPart)) {
+                return `${year}-${pad2(thirdPart)}-${pad2(secondPart)}`;
+            }
+
+            // Fallback cho các bản ghi đã đúng yyyy-mm-dd.
+            if (isValidDateParts(year, secondPart, thirdPart)) {
+                return `${year}-${pad2(secondPart)}-${pad2(thirdPart)}`;
+            }
+
+            return "";
+        }
+
+        return normalizeDateKey(textValue);
+    }
+
+    function toOrdersSourceDate(value) {
+        const isoDate = normalizeDateKey(value);
+        if (!isoDate) {
+            return null;
+        }
+
+        const [year, month, day] = isoDate.split("-");
+        return `${year}-${day}-${month}`;
+    }
+
+    function normalizeOrderRecord(order) {
+        if (!order || typeof order !== "object") {
+            return order;
+        }
+
+        const normalized = { ...order };
+
+        if (typeof normalized.OrderDate !== "undefined" && normalized.OrderDate !== null && String(normalized.OrderDate).trim() !== "") {
+            const normalizedOrderDate = normalizeOrderDateFromOrders(normalized.OrderDate);
+
+            if (normalizedOrderDate) {
+                normalized.OrderDate = normalizedOrderDate;
+            }
+        }
+
+        if (typeof normalized.Status !== "undefined") {
+            const normalizedStatus = normalizeStatusValue(normalized.Status);
+            normalized.Status = normalizedStatus || null;
+        }
+
+        return normalized;
+    }
+
+    function formatDate(value) {
+        const iso = normalizeDateKey(value);
+        if (!iso) {
+            return "-";
+        }
+
+        const [year, month, day] = iso.split("-");
+        return `${day}/${month}/${year}`;
+    }
+
+    function formatMonth(value) {
+        if (!value || !/^\d{4}-\d{2}$/.test(value)) {
+            return "-";
+        }
+
+        const [year, month] = value.split("-");
+        return `${month}/${year}`;
+    }
+
+    function normalizeStatusValue(value) {
+        const normalized = String(value || "").trim().toLowerCase();
+
+        if (!normalized) {
+            return "";
+        }
+
+        if (normalized === "processing") {
+            return "ai_processing";
+        }
+
+        return ORDER_STATUSES.includes(normalized) ? normalized : "";
+    }
+
+    function statusToClass(value) {
+        const normalized = normalizeStatusValue(value);
+
+        if (normalized === "completed") {
+            return "completed";
+        }
+
+        if (normalized === "ai_processing") {
+            return "processing";
+        }
+
+        if (normalized === "failed") {
+            return "failed";
+        }
+
+        return "unknown";
+    }
+
+    function getImageUrl(imagePath) {
+        if (!imagePath) {
+            return "";
+        }
+
+        const path = String(imagePath);
+        if (/^https?:\/\//i.test(path)) {
+            return path;
+        }
+
+        let finalPath = path;
+        const prefix = `${BUCKET_NAME}/`;
+
+        if (finalPath.startsWith(prefix)) {
+            finalPath = finalPath.slice(prefix.length);
+        }
+
+        return `${SUPABASE_URL}/storage/v1/object/public/${BUCKET_NAME}/${encodeURI(finalPath)}`;
+    }
+
+    function debounce(callback, waitMs) {
+        let timer = null;
+
+        return (...args) => {
+            if (timer) {
+                clearTimeout(timer);
+            }
+
+            timer = setTimeout(() => {
+                callback(...args);
+            }, waitMs);
+        };
+    }
+
+    function setLoginMessage(message, isError) {
+        const loginMessage = byId("loginMessage");
+        loginMessage.textContent = message || "";
+        loginMessage.className = "login-message";
+
+        if (message) {
+            loginMessage.classList.add(isError ? "error-text" : "ok-text");
+        }
+    }
+
+    function setEditMessage(message, isError) {
+        const editMessage = byId("editMessage");
+        editMessage.textContent = message || "";
+        editMessage.className = "edit-message";
+
+        if (message) {
+            editMessage.classList.add(isError ? "error-text" : "ok-text");
+        }
+    }
+
+    function syncBodyOverflow() {
+        const imageVisible = byId("imageModal").classList.contains("show");
+        const editVisible = byId("editModal").classList.contains("show");
+        document.body.style.overflow = imageVisible || editVisible ? "hidden" : "";
+    }
+
+    function nullableText(value) {
+        const normalized = String(value || "").trim();
+        return normalized ? normalized : null;
+    }
+
+    function orderIdValue(order) {
+        if (!order || typeof order !== "object") {
+            return "";
+        }
+
+        if (order.ID !== null && typeof order.ID !== "undefined") {
+            return order.ID;
+        }
+
+        if (order.id !== null && typeof order.id !== "undefined") {
+            return order.id;
+        }
+
+        return "";
+    }
+
+    function hasOrderColumn(columnName) {
+        for (const order of state.orders) {
+            if (order && Object.prototype.hasOwnProperty.call(order, columnName)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function buildOrderIdTargets(orderId) {
+        const targets = [];
+
+        function addTarget(column, value) {
+            if (value === "" || value === null || typeof value === "undefined") {
+                return;
+            }
+
+            const exists = targets.some((target) => {
+                return target.column === column && String(target.value) === String(value);
+            });
+
+            if (!exists) {
+                targets.push({ column, value });
+            }
+        }
+
+        const hasUpperId = hasOrderColumn("ID");
+        const hasLowerId = hasOrderColumn("id");
+
+        // Nếu không xác định được schema thì ưu tiên ID (schema hiện tại của bạn).
+        if (hasUpperId || !hasLowerId) {
+            addTarget("ID", orderId);
+        }
+
+        if (hasLowerId) {
+            addTarget("id", orderId);
+        }
+
+        const numericId = Number(orderId);
+        if (Number.isFinite(numericId)) {
+            if (hasUpperId || !hasLowerId) {
+                addTarget("ID", numericId);
+            }
+
+            if (hasLowerId) {
+                addTarget("id", numericId);
+            }
+        }
+
+        return targets;
+    }
+
+    function createInfoRow(labelText, valueText, isStatus) {
+        const row = document.createElement("div");
+        row.className = "row";
+
+        const label = document.createElement("div");
+        label.className = "label";
+        label.textContent = labelText;
+
+        const value = document.createElement("div");
+        value.className = "value";
+
+        if (isStatus) {
+            const normalizedStatus = normalizeStatusValue(valueText);
+            const chip = document.createElement("span");
+            chip.className = `status ${statusToClass(normalizedStatus)}`;
+            chip.textContent = normalizedStatus || "-";
+            value.appendChild(chip);
+        } else {
+            value.textContent = valueText || "-";
+        }
+
+        row.append(label, value);
+        return row;
+    }
+
+    function createOrderCard(order) {
+        const card = document.createElement("article");
+        card.className = "order-card";
+
+        const imageUrl = getImageUrl(order.ImagePath);
+
+        if (imageUrl) {
+            const image = document.createElement("img");
+            image.className = "order-image";
+            image.src = imageUrl;
+            image.alt = order.OrderCode || "Order image";
+            image.addEventListener("click", () => {
+                openImageModal(imageUrl, order.OrderCode || "");
+            });
+            image.onerror = () => {
+                image.style.display = "none";
+            };
+            card.appendChild(image);
+        }
+
+        const content = document.createElement("div");
+        content.className = "order-content";
+
+        const code = document.createElement("div");
+        code.className = "order-code";
+        code.textContent = `🧾 ${order.OrderCode || "Chưa có mã"}`;
+        content.appendChild(code);
+
+        content.appendChild(createInfoRow("📅 Ngày:", formatDate(order.OrderDate || order.CreatedAt), false));
+        content.appendChild(createInfoRow("👤 Khách hàng:", order.CustomerName || "-", false));
+        content.appendChild(createInfoRow("📦 Số kiện:", String(order.QuantitySK ?? "-"), false));
+        content.appendChild(createInfoRow("👷 Người đóng:", order.PackerND || "-", false));
+        content.appendChild(createInfoRow("🚚 Người giao:", order.DelivererNG || "-", false));
+        content.appendChild(createInfoRow("Trạng thái:", order.Status || "-", true));
+
+        const actions = document.createElement("div");
+        actions.className = "card-actions";
+
+        const editButton = document.createElement("button");
+        editButton.type = "button";
+        editButton.className = "secondary edit-btn";
+        editButton.textContent = "Sửa đơn";
+        editButton.addEventListener("click", () => {
+            openEditModal(order);
         });
 
-        dataTableBody.appendChild(tr);
-      });
+        const deleteButton = document.createElement("button");
+        deleteButton.type = "button";
+        deleteButton.className = "danger delete-btn";
+        deleteButton.textContent = "Xóa";
+        deleteButton.addEventListener("click", async () => {
+            await deleteOrder(order);
+        });
+
+        actions.appendChild(editButton);
+        actions.appendChild(deleteButton);
+        content.appendChild(actions);
+
+        card.appendChild(content);
+
+        return card;
     }
 
-    // ==========================================
-    // 4. KIỂM TRA PHIÊN ĐĂNG NHẬP (SESSION)
-    // ==========================================
-    async function checkAuthSession() {
-      const { data: { session } } = await supabase.auth.getSession();
+    function createTableCell(text, className) {
+        const cell = document.createElement("td");
+        cell.textContent = text || "-";
 
-      if (session) {
-        loginSection.classList.add('hidden');
-        dashboardSection.classList.remove('hidden');
-        document.getElementById('user-email').textContent = session.user.email;
-        fetchOrdersData();
-      } else {
-        loginSection.classList.remove('hidden');
-        dashboardSection.classList.add('hidden');
-      }
+        if (className) {
+            cell.className = className;
+        }
+
+        return cell;
     }
 
-    // ==========================================
-    // 5. ĐĂNG XUẤT
-    // ==========================================
+    function renderGrid() {
+        const container = byId("ordersGrid");
+        container.innerHTML = "";
+
+        if (!state.filteredOrders.length) {
+            container.innerHTML = '<div class="empty">Không có đơn hàng phù hợp bộ lọc</div>';
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+
+        for (const order of state.filteredOrders) {
+            fragment.appendChild(createOrderCard(order));
+        }
+
+        container.appendChild(fragment);
+    }
+
+    function renderTable() {
+        const body = byId("ordersTableBody");
+        body.innerHTML = "";
+
+        if (!state.filteredOrders.length) {
+            const row = document.createElement("tr");
+            const cell = document.createElement("td");
+            cell.colSpan = 9;
+            cell.className = "table-empty";
+            cell.textContent = "Không có đơn hàng phù hợp bộ lọc";
+            row.appendChild(cell);
+            body.appendChild(row);
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+
+        for (const order of state.filteredOrders) {
+            const row = document.createElement("tr");
+
+            row.appendChild(createTableCell(order.OrderCode || "Chưa có mã", "strong"));
+            row.appendChild(createTableCell(formatDate(order.OrderDate || order.CreatedAt), ""));
+            row.appendChild(createTableCell(order.CustomerName || "-", ""));
+            row.appendChild(createTableCell(String(order.QuantitySK ?? "-"), ""));
+            row.appendChild(createTableCell(order.PackerND || "-", ""));
+            row.appendChild(createTableCell(order.DelivererNG || "-", ""));
+
+            const statusCell = document.createElement("td");
+            const normalizedStatus = normalizeStatusValue(order.Status);
+            const chip = document.createElement("span");
+            chip.className = `status ${statusToClass(normalizedStatus)}`;
+            chip.textContent = normalizedStatus || "-";
+            statusCell.appendChild(chip);
+            row.appendChild(statusCell);
+
+            const imageCell = document.createElement("td");
+            const imageUrl = getImageUrl(order.ImagePath);
+
+            if (imageUrl) {
+                const previewBtn = document.createElement("button");
+                previewBtn.type = "button";
+                previewBtn.className = "link-btn";
+                previewBtn.textContent = "Xem ảnh";
+                previewBtn.addEventListener("click", () => {
+                    openImageModal(imageUrl, order.OrderCode || "");
+                });
+                imageCell.appendChild(previewBtn);
+            } else {
+                imageCell.textContent = "-";
+            }
+
+            row.appendChild(imageCell);
+
+            const actionCell = document.createElement("td");
+            const actionWrap = document.createElement("div");
+            actionWrap.className = "table-actions";
+
+            const editButton = document.createElement("button");
+            editButton.type = "button";
+            editButton.className = "secondary table-action-btn";
+            editButton.textContent = "Sửa";
+            editButton.addEventListener("click", () => {
+                openEditModal(order);
+            });
+
+            const deleteButton = document.createElement("button");
+            deleteButton.type = "button";
+            deleteButton.className = "danger table-action-btn";
+            deleteButton.textContent = "Xóa";
+            deleteButton.addEventListener("click", async () => {
+                await deleteOrder(order);
+            });
+
+            actionWrap.appendChild(editButton);
+            actionWrap.appendChild(deleteButton);
+            actionCell.appendChild(actionWrap);
+
+            row.appendChild(actionCell);
+            fragment.appendChild(row);
+        }
+
+        body.appendChild(fragment);
+    }
+
+    function renderByCurrentView() {
+        if (state.view === "grid") {
+            byId("ordersGrid").classList.remove("hidden");
+            byId("ordersTableWrap").classList.add("hidden");
+            renderGrid();
+        } else {
+            byId("ordersGrid").classList.add("hidden");
+            byId("ordersTableWrap").classList.remove("hidden");
+            renderTable();
+        }
+    }
+
+    function setView(viewName) {
+        state.view = viewName === "table" ? "table" : "grid";
+
+        byId("gridViewBtn").classList.toggle("active", state.view === "grid");
+        byId("tableViewBtn").classList.toggle("active", state.view === "table");
+
+        renderByCurrentView();
+    }
+
+    function splitDashboardPersonValues(value, explode) {
+        const rawText = String(value || "").trim();
+
+        if (!rawText) {
+            return ["Chưa gán"];
+        }
+
+        if (!explode) {
+            return [rawText];
+        }
+
+        const parts = rawText
+            .split("+")
+            .map((item) => item.trim())
+            .filter(Boolean);
+
+        return parts.length ? parts : ["Chưa gán"];
+    }
+
+    function aggregateByPerson(orders, fieldName, options) {
+        const settings = options || {};
+        const explode = Boolean(settings.explode);
+
+        const map = new Map();
+
+        for (const order of orders) {
+            const people = splitDashboardPersonValues(order[fieldName], explode);
+            const uniquePeople = explode ? Array.from(new Set(people)) : people;
+
+            for (const person of uniquePeople) {
+                map.set(person, (map.get(person) || 0) + 1);
+            }
+        }
+
+        return Array.from(map.entries())
+            .map(([name, count]) => ({ name, count }))
+            .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, "vi"));
+    }
+
+    function renderStatsTable(container, rows) {
+        container.innerHTML = "";
+
+        if (!rows.length) {
+            container.innerHTML = '<div class="stats-empty">Không có dữ liệu</div>';
+            return;
+        }
+
+        const table = document.createElement("table");
+        table.className = "mini-table";
+
+        const thead = document.createElement("thead");
+        const headerRow = document.createElement("tr");
+
+        ["#", "Nhân sự", "Số đơn"].forEach((title) => {
+            const th = document.createElement("th");
+            th.textContent = title;
+            headerRow.appendChild(th);
+        });
+
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        const tbody = document.createElement("tbody");
+
+        rows.forEach((item, index) => {
+            const row = document.createElement("tr");
+            row.appendChild(createTableCell(String(index + 1), ""));
+            row.appendChild(createTableCell(item.name, ""));
+            row.appendChild(createTableCell(String(item.count), ""));
+            tbody.appendChild(row);
+        });
+
+        table.appendChild(tbody);
+        container.appendChild(table);
+    }
+
+    function statusSummary(orders) {
+        const summary = {
+            completed: 0,
+            processing: 0,
+            failed: 0,
+            other: 0
+        };
+
+        for (const order of orders) {
+            const normalized = normalizeStatusValue(order.Status);
+
+            if (normalized === "completed") {
+                summary.completed += 1;
+            } else if (normalized === "ai_processing") {
+                summary.processing += 1;
+            } else if (normalized === "failed") {
+                summary.failed += 1;
+            } else {
+                summary.other += 1;
+            }
+        }
+
+        return summary;
+    }
+
+    function destroyChart(chartKey) {
+        const chart = state.charts[chartKey];
+        if (chart) {
+            chart.destroy();
+            state.charts[chartKey] = null;
+        }
+    }
+
+    function destroyAllCharts() {
+        destroyChart("statusPie");
+        destroyChart("staffBar");
+        destroyChart("trendLine");
+    }
+
+    function setChartEmptyState(emptyId, message) {
+        const empty = byId(emptyId);
+        if (!empty) {
+            return;
+        }
+
+        if (message) {
+            empty.textContent = message;
+            empty.classList.remove("hidden");
+        } else {
+            empty.classList.add("hidden");
+        }
+    }
+
+    function renderKpis(orders) {
+        const summary = statusSummary(orders);
+
+        byId("kpiTotalOrders").textContent = String(orders.length);
+        byId("kpiCompleted").textContent = String(summary.completed);
+        byId("kpiProcessing").textContent = String(summary.processing);
+        byId("kpiFailed").textContent = String(summary.failed);
+    }
+
+    function renderStatusPieChart(orders) {
+        destroyChart("statusPie");
+
+        if (typeof Chart === "undefined") {
+            setChartEmptyState("statusPieEmpty", "Không tải được thư viện chart.");
+            return;
+        }
+
+        const summary = statusSummary(orders);
+        const labels = [];
+        const values = [];
+        const colors = [];
+
+        if (summary.completed > 0) {
+            labels.push("Hoàn thành");
+            values.push(summary.completed);
+            colors.push("#22c55e");
+        }
+
+        if (summary.processing > 0) {
+            labels.push("Đang xử lý");
+            values.push(summary.processing);
+            colors.push("#f59e0b");
+        }
+
+        if (summary.failed > 0) {
+            labels.push("Thất bại");
+            values.push(summary.failed);
+            colors.push("#ef4444");
+        }
+
+        if (summary.other > 0) {
+            labels.push("Khác");
+            values.push(summary.other);
+            colors.push("#64748b");
+        }
+
+        if (!values.length) {
+            setChartEmptyState("statusPieEmpty", "Không có dữ liệu để vẽ biểu đồ trạng thái.");
+            return;
+        }
+
+        setChartEmptyState("statusPieEmpty", "");
+
+        const ctx = byId("statusPieChart");
+        state.charts.statusPie = new Chart(ctx, {
+            type: "pie",
+            data: {
+                labels,
+                datasets: [
+                    {
+                        data: values,
+                        backgroundColor: colors,
+                        borderColor: "#ffffff",
+                        borderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: "bottom"
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => {
+                                const total = values.reduce((sum, current) => sum + current, 0);
+                                const ratio = total ? ((context.raw * 100) / total).toFixed(1) : "0.0";
+                                return `${context.label}: ${context.raw} đơn (${ratio}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function topPeople(orders, fieldName, limit, options) {
+        return aggregateByPerson(orders, fieldName, options).slice(0, limit);
+    }
+
+    function renderStaffBarChart(orders, explodePeople) {
+        destroyChart("staffBar");
+
+        if (typeof Chart === "undefined") {
+            setChartEmptyState("staffBarEmpty", "Không tải được thư viện chart.");
+            return;
+        }
+
+        const aggregateOptions = { explode: explodePeople };
+        const packers = topPeople(orders, "PackerND", 6, aggregateOptions);
+        const deliverers = topPeople(orders, "DelivererNG", 6, aggregateOptions);
+
+        const labels = Array.from(new Set([
+            ...packers.map((item) => item.name),
+            ...deliverers.map((item) => item.name)
+        ]));
+
+        if (!labels.length) {
+            setChartEmptyState("staffBarEmpty", "Không có dữ liệu để vẽ biểu đồ nhân sự.");
+            return;
+        }
+
+        const packerMap = new Map(packers.map((item) => [item.name, item.count]));
+        const delivererMap = new Map(deliverers.map((item) => [item.name, item.count]));
+
+        setChartEmptyState("staffBarEmpty", "");
+
+        const ctx = byId("staffBarChart");
+        state.charts.staffBar = new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels,
+                datasets: [
+                    {
+                        label: "Người đóng",
+                        data: labels.map((label) => packerMap.get(label) || 0),
+                        backgroundColor: "rgba(59, 130, 246, 0.75)",
+                        borderColor: "#2563eb",
+                        borderWidth: 1
+                    },
+                    {
+                        label: "Người giao",
+                        data: labels.map((label) => delivererMap.get(label) || 0),
+                        backgroundColor: "rgba(16, 185, 129, 0.75)",
+                        borderColor: "#059669",
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                indexAxis: "y",
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: "bottom"
+                    }
+                }
+            }
+        });
+    }
+
+    function parseIsoDateStrict(value) {
+        if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+            return null;
+        }
+
+        const [yearString, monthString, dayString] = value.split("-");
+        const year = Number(yearString);
+        const month = Number(monthString);
+        const day = Number(dayString);
+
+        if (!isValidDateParts(year, month, day)) {
+            return null;
+        }
+
+        return new Date(year, month - 1, day);
+    }
+
+    function countOrdersByDate(orders) {
+        const counter = new Map();
+
+        for (const order of orders) {
+            const key = normalizeDateKey(order.OrderDate || order.CreatedAt);
+            if (key) {
+                counter.set(key, (counter.get(key) || 0) + 1);
+            }
+        }
+
+        return counter;
+    }
+
+    function renderTrendLineChart(orders, dashboardMode) {
+        destroyChart("trendLine");
+
+        if (typeof Chart === "undefined") {
+            setChartEmptyState("trendLineEmpty", "Không tải được thư viện chart.");
+            return;
+        }
+
+        const titleElement = byId("trendLineTitle");
+
+        if (dashboardMode === "day") {
+            titleElement.textContent = "Xu hướng 7 ngày quanh ngày đã chọn (Line)";
+
+            const selectedDay = byId("dashboardDay").value;
+            const centerDate = parseIsoDateStrict(selectedDay);
+
+            if (!centerDate) {
+                setChartEmptyState("trendLineEmpty", "Vui lòng chọn ngày để xem xu hướng 7 ngày.");
+                return;
+            }
+
+            const counter = countOrdersByDate(orders);
+            const labels = [];
+            const values = [];
+
+            for (let offset = -3; offset <= 3; offset += 1) {
+                const date = new Date(centerDate);
+                date.setDate(centerDate.getDate() + offset);
+
+                const iso = toIsoDate(date);
+                labels.push(`${pad2(date.getDate())}/${pad2(date.getMonth() + 1)}`);
+                values.push(counter.get(iso) || 0);
+            }
+
+            setChartEmptyState("trendLineEmpty", "");
+
+            const ctx = byId("trendLineChart");
+            state.charts.trendLine = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: "Số đơn / ngày",
+                            data: values,
+                            borderColor: "#6366f1",
+                            backgroundColor: "rgba(99, 102, 241, 0.18)",
+                            fill: true,
+                            tension: 0.25,
+                            pointRadius: 3,
+                            pointHoverRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: "bottom"
+                        }
+                    }
+                }
+            });
+
+            return;
+        }
+
+        titleElement.textContent = "Xu hướng đơn trong tháng đã chọn (Line)";
+
+        const monthValue = byId("dashboardMonth").value;
+        if (!monthValue || !/^\d{4}-\d{2}$/.test(monthValue)) {
+            setChartEmptyState("trendLineEmpty", "Vui lòng chọn tháng để xem xu hướng.");
+            return;
+        }
+
+        const monthOrders = orders.filter((order) => {
+            return normalizeDateKey(order.OrderDate || order.CreatedAt).startsWith(monthValue);
+        });
+
+        if (!monthOrders.length) {
+            setChartEmptyState("trendLineEmpty", "Chưa có dữ liệu theo tháng để vẽ xu hướng.");
+            return;
+        }
+
+        const [yearString, monthString] = monthValue.split("-");
+        const year = Number(yearString);
+        const month = Number(monthString);
+        const totalDays = new Date(year, month, 0).getDate();
+
+        const dailyCounter = countOrdersByDate(monthOrders);
+
+        const labels = [];
+        const values = [];
+
+        for (let day = 1; day <= totalDays; day += 1) {
+            const iso = `${yearString}-${monthString}-${pad2(day)}`;
+            labels.push(`${pad2(day)}/${monthString}`);
+            values.push(dailyCounter.get(iso) || 0);
+        }
+
+        setChartEmptyState("trendLineEmpty", "");
+
+        const ctx = byId("trendLineChart");
+        state.charts.trendLine = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels,
+                datasets: [
+                    {
+                        label: "Số đơn",
+                        data: values,
+                        borderColor: "#6366f1",
+                        backgroundColor: "rgba(99, 102, 241, 0.18)",
+                        fill: true,
+                        tension: 0.25,
+                        pointRadius: 3,
+                        pointHoverRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: "bottom"
+                    }
+                }
+            }
+        });
+    }
+
+    function setDashboardMode(mode) {
+        state.dashboardMode = mode === "month" ? "month" : "day";
+
+        byId("dashboardDayModeBtn").classList.toggle("active", state.dashboardMode === "day");
+        byId("dashboardMonthModeBtn").classList.toggle("active", state.dashboardMode === "month");
+
+        byId("dashboardDayPanel").classList.toggle("hidden", state.dashboardMode !== "day");
+        byId("dashboardMonthPanel").classList.toggle("hidden", state.dashboardMode !== "month");
+
+        byId("dailyStatsCard").classList.toggle("hidden", state.dashboardMode !== "day");
+        byId("monthlyStatsCard").classList.toggle("hidden", state.dashboardMode !== "month");
+
+        renderDashboard();
+    }
+
+    function setDashboardExplode(enabled) {
+        state.dashboardExplode = Boolean(enabled);
+        byId("dashboardExplodeToggle").checked = state.dashboardExplode;
+        renderDashboard();
+    }
+
+    function renderDashboard() {
+        const source = state.filteredOrders;
+        const selectedDay = byId("dashboardDay").value;
+        const selectedMonth = byId("dashboardMonth").value;
+
+        const dailyOrders = selectedDay
+            ? source.filter((order) => normalizeDateKey(order.OrderDate || order.CreatedAt) === selectedDay)
+            : [];
+
+        const monthlyOrders = selectedMonth
+            ? source.filter((order) => normalizeDateKey(order.OrderDate || order.CreatedAt).startsWith(selectedMonth))
+            : [];
+
+        byId("dailySummary").textContent = `Theo ngày ${formatDate(selectedDay)}: ${dailyOrders.length} đơn`;
+        byId("monthlySummary").textContent = `Theo tháng ${formatMonth(selectedMonth)}: ${monthlyOrders.length} đơn`;
+
+        const dashboardOrders = state.dashboardMode === "day" ? dailyOrders : monthlyOrders;
+        const personAggregateOptions = { explode: state.dashboardExplode };
+
+        renderKpis(dashboardOrders);
+        renderStatusPieChart(dashboardOrders);
+        renderStaffBarChart(dashboardOrders, state.dashboardExplode);
+        renderTrendLineChart(source, state.dashboardMode);
+
+        renderStatsTable(byId("dailyPackerStats"), aggregateByPerson(dailyOrders, "PackerND", personAggregateOptions));
+        renderStatsTable(byId("dailyDelivererStats"), aggregateByPerson(dailyOrders, "DelivererNG", personAggregateOptions));
+        renderStatsTable(byId("monthlyPackerStats"), aggregateByPerson(monthlyOrders, "PackerND", personAggregateOptions));
+        renderStatsTable(byId("monthlyDelivererStats"), aggregateByPerson(monthlyOrders, "DelivererNG", personAggregateOptions));
+    }
+
+    function buildStatusFilterOptions() {
+        const select = byId("statusFilter");
+        const previous = select.value;
+
+        select.innerHTML = '<option value="">Tất cả trạng thái</option>';
+
+        for (const status of ORDER_STATUSES) {
+            const option = document.createElement("option");
+            option.value = status;
+            option.textContent = status;
+            select.appendChild(option);
+        }
+
+        if (ORDER_STATUSES.includes(previous)) {
+            select.value = previous;
+        } else {
+            select.value = "";
+        }
+    }
+
+    function employeeAliases(employee) {
+        if (!employee) {
+            return [];
+        }
+
+        if (Array.isArray(employee.aliases)) {
+            return employee.aliases
+                .map((alias) => String(alias || "").trim().toLowerCase())
+                .filter(Boolean);
+        }
+
+        if (typeof employee.aliases === "string") {
+            return employee.aliases
+                .replaceAll("{", "")
+                .replaceAll("}", "")
+                .split(",")
+                .map((alias) => alias.trim().toLowerCase())
+                .filter(Boolean);
+        }
+
+        return [];
+    }
+
+    function renderEmployeeSelectOptions() {
+        const selectIds = ["editPackerEmployee", "editDelivererEmployee"];
+
+        for (const selectId of selectIds) {
+            const select = byId(selectId);
+            if (!select) {
+                continue;
+            }
+
+            const selectedIds = Array.from(select.selectedOptions)
+                .map((option) => option.value)
+                .filter(Boolean);
+
+            select.innerHTML = "";
+
+            for (const employee of state.employees) {
+                const option = document.createElement("option");
+                option.value = String(employee.id);
+                option.textContent = `${employee.name || "Chưa đặt tên"}${employee.code ? ` (${employee.code})` : ""}`;
+                option.selected = selectedIds.includes(option.value);
+                select.appendChild(option);
+            }
+        }
+
+        const hint = byId("editEmployeeHint");
+        if (!state.employees.length) {
+            hint.textContent = "Không có employee hoặc chưa tải được danh sách. Bạn vẫn có thể nhập tay tên/mã.";
+            return;
+        }
+
+        hint.textContent = `Đã tải ${state.employees.length} employee. Có thể chọn nhiều (giu Ctrl/Command), hệ thống lưu dạng name1 + name2, code1 + code2. Bo chon het để nhập tay.`;
+    }
+
+    function splitMultiEmployeeValue(value) {
+        return String(value || "")
+            .split("+")
+            .map((item) => item.trim())
+            .filter(Boolean);
+    }
+
+    function joinMultiEmployeeValue(values) {
+        return values
+            .map((item) => String(item || "").trim())
+            .filter(Boolean)
+            .join(" + ");
+    }
+
+    function normalizeMultiEmployeeText(value) {
+        const parts = splitMultiEmployeeValue(value);
+        return parts.length ? joinMultiEmployeeValue(parts) : "";
+    }
+
+    function getEmployeeEditorFields(role) {
+        const isPacker = role === "packer";
+
+        return {
+            select: byId(isPacker ? "editPackerEmployee" : "editDelivererEmployee"),
+            nameInput: byId(isPacker ? "editPackerND" : "editDelivererNG"),
+            codeInput: byId(isPacker ? "editPackerNDCode" : "editDelivererNGCode")
+        };
+    }
+
+    function getSelectedEmployeesFromSelect(select) {
+        if (!select) {
+            return [];
+        }
+
+        const selectedIds = Array.from(select.selectedOptions)
+            .map((option) => option.value)
+            .filter(Boolean);
+
+        const selectedEmployees = [];
+
+        for (const selectedId of selectedIds) {
+            const employee = state.employees.find((item) => String(item.id) === selectedId);
+            if (employee) {
+                selectedEmployees.push(employee);
+            }
+        }
+
+        return selectedEmployees;
+    }
+
+    function setEmployeeInputsReadonly(role, readonly) {
+        const { nameInput, codeInput } = getEmployeeEditorFields(role);
+
+        if (!nameInput || !codeInput) {
+            return;
+        }
+
+        nameInput.readOnly = readonly;
+        codeInput.readOnly = readonly;
+    }
+
+    function findEmployeeByToken(token) {
+        const normalizedToken = String(token || "").trim().toLowerCase();
+        if (!normalizedToken) {
+            return null;
+        }
+
+        for (const employee of state.employees) {
+            const employeeCode = String(employee.code || "").trim().toLowerCase();
+            if (employeeCode && employeeCode === normalizedToken) {
+                return employee;
+            }
+        }
+
+        for (const employee of state.employees) {
+            const employeeName = String(employee.name || "").trim().toLowerCase();
+            if (employeeName && employeeName === normalizedToken) {
+                return employee;
+            }
+
+            const aliases = employeeAliases(employee);
+            if (aliases.includes(normalizedToken)) {
+                return employee;
+            }
+        }
+
+        return null;
+    }
+
+    function fillEmployeeSelectByCurrentValue(role) {
+        const { select, nameInput, codeInput } = getEmployeeEditorFields(role);
+
+        if (!select || !nameInput || !codeInput) {
+            return;
+        }
+
+        const codeTokens = splitMultiEmployeeValue(codeInput.value);
+        const nameTokens = splitMultiEmployeeValue(nameInput.value);
+        const tokenList = [...codeTokens, ...nameTokens];
+        const matchedIds = new Set();
+
+        for (const token of tokenList) {
+            const matched = findEmployeeByToken(token);
+            if (matched) {
+                matchedIds.add(String(matched.id));
+            }
+        }
+
+        for (const option of select.options) {
+            option.selected = matchedIds.has(option.value);
+        }
+
+        applyEmployeeFromSelect(role);
+    }
+
+    function applyEmployeeFromSelect(role) {
+        const { select, nameInput, codeInput } = getEmployeeEditorFields(role);
+
+        if (!select || !nameInput || !codeInput) {
+            return;
+        }
+
+        const selectedEmployees = getSelectedEmployeesFromSelect(select);
+
+        if (!selectedEmployees.length) {
+            setEmployeeInputsReadonly(role, false);
+            return;
+        }
+
+        nameInput.value = joinMultiEmployeeValue(selectedEmployees.map((employee) => employee.name || ""));
+        codeInput.value = joinMultiEmployeeValue(selectedEmployees.map((employee) => employee.code || ""));
+        setEmployeeInputsReadonly(role, true);
+    }
+
+    function getEmployeePayloadForRole(role) {
+        const { select, nameInput, codeInput } = getEmployeeEditorFields(role);
+
+        if (!select || !nameInput || !codeInput) {
+            return { name: null, code: null };
+        }
+
+        const selectedEmployees = getSelectedEmployeesFromSelect(select);
+
+        if (selectedEmployees.length) {
+            return {
+                name: nullableText(joinMultiEmployeeValue(selectedEmployees.map((employee) => employee.name || ""))),
+                code: nullableText(joinMultiEmployeeValue(selectedEmployees.map((employee) => employee.code || "")))
+            };
+        }
+
+        return {
+            name: nullableText(normalizeMultiEmployeeText(nameInput.value)),
+            code: nullableText(normalizeMultiEmployeeText(codeInput.value))
+        };
+    }
+
+    function openEditModal(order) {
+        const orderId = orderIdValue(order);
+
+        if (orderId === "" || orderId === null || typeof orderId === "undefined") {
+            alert("Đơn hàng chưa có ID, không thể cập nhật.");
+            return;
+        }
+
+        state.editingOrderId = String(orderId);
+
+        byId("editOrderId").value = state.editingOrderId;
+        byId("editOrderCode").value = order.OrderCode || "";
+        byId("editOrderDate").value = normalizeDateKey(order.OrderDate || order.CreatedAt);
+        byId("editCustomerName").value = order.CustomerName || "";
+        byId("editQuantitySK").value = order.QuantitySK ?? "";
+        byId("editStatus").value = normalizeStatusValue(order.Status) || "";
+        byId("editImagePath").value = order.ImagePath || "";
+
+        byId("editPackerND").value = order.PackerND || "";
+        byId("editPackerNDCode").value = order.PackerNDCode || "";
+        byId("editDelivererNG").value = order.DelivererNG || "";
+        byId("editDelivererNGCode").value = order.DelivererNGCode || "";
+
+        renderEmployeeSelectOptions();
+        fillEmployeeSelectByCurrentValue("packer");
+        fillEmployeeSelectByCurrentValue("deliverer");
+
+        setEditMessage("", false);
+
+        byId("editModal").classList.add("show");
+        syncBodyOverflow();
+    }
+
+    function closeEditModal() {
+        byId("editModal").classList.remove("show");
+        byId("editOrderForm").reset();
+
+        for (const role of ["packer", "deliverer"]) {
+            const { select } = getEmployeeEditorFields(role);
+            if (select) {
+                for (const option of select.options) {
+                    option.selected = false;
+                }
+            }
+            setEmployeeInputsReadonly(role, false);
+        }
+
+        byId("editOrderId").value = "";
+        state.editingOrderId = "";
+        setEditMessage("", false);
+        syncBodyOverflow();
+    }
+
+    async function saveOrderEdit(event) {
+        event.preventDefault();
+
+        if (!supabaseClient || !state.session) {
+            setEditMessage("Bạn cần đăng nhập trước khi cập nhật đơn.", true);
+            return;
+        }
+
+        const orderId = byId("editOrderId").value;
+        if (!orderId) {
+            setEditMessage("Không xác định được ID đơn hàng.", true);
+            return;
+        }
+
+        const quantityRaw = byId("editQuantitySK").value.trim();
+        let quantityValue = null;
+
+        if (quantityRaw !== "") {
+            const parsed = Number(quantityRaw);
+            if (!Number.isFinite(parsed)) {
+                setEditMessage("Số kiện không hợp lệ.", true);
+                return;
+            }
+            quantityValue = parsed;
+        }
+
+        const packerPayload = getEmployeePayloadForRole("packer");
+        const delivererPayload = getEmployeePayloadForRole("deliverer");
+
+        const payload = {
+            OrderCode: nullableText(byId("editOrderCode").value),
+            OrderDate: toOrdersSourceDate(nullableText(byId("editOrderDate").value)),
+            CustomerName: nullableText(byId("editCustomerName").value),
+            QuantitySK: quantityValue,
+            Status: normalizeStatusValue(byId("editStatus").value) || null,
+            PackerND: packerPayload.name,
+            PackerNDCode: packerPayload.code,
+            DelivererNG: delivererPayload.name,
+            DelivererNGCode: delivererPayload.code
+        };
+
+        const saveButton = byId("editSaveBtn");
+        saveButton.disabled = true;
+        setEditMessage("Đang lưu cập nhật...", false);
+
+        const targets = buildOrderIdTargets(orderId);
+
+        if (!targets.length) {
+            setEditMessage("Không xác định được cột ID để cập nhật đơn hàng.", true);
+            saveButton.disabled = false;
+            return;
+        }
+
+        let updated = false;
+        let finalError = null;
+
+        for (const target of targets) {
+            const result = await supabaseClient
+                .from(TABLE_NAME)
+                .update(payload)
+                .eq(target.column, target.value)
+                .select("*");
+
+            if (!result.error && Array.isArray(result.data) && result.data.length > 0) {
+                updated = true;
+                break;
+            }
+
+            if (result.error) {
+                finalError = result.error;
+            }
+        }
+
+        saveButton.disabled = false;
+
+        if (!updated) {
+            setEditMessage(`Lưu thất bại: ${(finalError && finalError.message) || "Không tìm thấy đơn hàng để cập nhật."}`, true);
+            return;
+        }
+
+        closeEditModal();
+        await loadOrders(false);
+    }
+
+    async function deleteOrder(order) {
+        if (!supabaseClient || !state.session) {
+            alert("Bạn cần đăng nhập trước khi xóa order.");
+            return;
+        }
+
+        const orderId = orderIdValue(order);
+        if (orderId === "" || orderId === null || typeof orderId === "undefined") {
+            alert("Đơn hàng chưa có ID, không thể xóa.");
+            return;
+        }
+
+        const orderCode = order.OrderCode ? ` (${order.OrderCode})` : "";
+        const accepted = window.confirm(
+            `Xác nhận xóa order ID ${orderId}${orderCode}?\nChỉ xóa bản ghi trong bảng orders, KHÔNG xóa ảnh trong bucket.`
+        );
+
+        if (!accepted) {
+            return;
+        }
+
+        const targets = buildOrderIdTargets(orderId);
+
+        if (!targets.length) {
+            alert("Không xác định được cột ID để xóa đơn hàng.");
+            return;
+        }
+
+        let deleted = false;
+        let finalError = null;
+
+        for (const target of targets) {
+            const result = await supabaseClient
+                .from(TABLE_NAME)
+                .delete({ count: "exact" })
+                .eq(target.column, target.value);
+
+            if (!result.error && Number(result.count || 0) > 0) {
+                deleted = true;
+                break;
+            }
+
+            if (result.error) {
+                finalError = result.error;
+            }
+        }
+
+        if (!deleted) {
+            const message = (finalError && finalError.message) || "Không tìm thấy order để xóa.";
+
+            if (state.editingOrderId && String(orderId) === state.editingOrderId) {
+                setEditMessage(`Xóa thất bại: ${message}`, true);
+            } else {
+                alert(`Xóa thất bại: ${message}`);
+            }
+            return;
+        }
+
+        if (state.editingOrderId && String(orderId) === state.editingOrderId) {
+            closeEditModal();
+        }
+
+        await loadOrders(false);
+    }
+
+    async function loadEmployees() {
+        if (!supabaseClient || !state.session) {
+            return;
+        }
+
+        const attempts = [
+            () => supabaseClient
+                .from(EMPLOYEE_TABLE)
+                .select("id, code, name, aliases, is_active")
+                .eq("is_active", true)
+                .order("name", { ascending: true }),
+
+            () => supabaseClient
+                .from(EMPLOYEE_TABLE)
+                .select("id, code, name, aliases, is_active")
+                .order("name", { ascending: true })
+        ];
+
+        let result = null;
+
+        for (const attempt of attempts) {
+            result = await attempt();
+            if (!result.error) {
+                break;
+            }
+        }
+
+        if (!result || result.error) {
+            state.employees = [];
+            renderEmployeeSelectOptions();
+            byId("editEmployeeHint").textContent = `Không tải được employees: ${(result && result.error && result.error.message) || "Unknown error"}. Bạn vẫn có thể nhập tay.`;
+            return;
+        }
+
+        state.employees = Array.isArray(result.data) ? result.data : [];
+        renderEmployeeSelectOptions();
+    }
+
+    function matchesFilters(order, filters) {
+        const statusValue = normalizeStatusValue(order.Status);
+        const orderDate = normalizeDateKey(order.OrderDate || order.CreatedAt);
+
+        if (filters.status && statusValue !== filters.status) {
+            return false;
+        }
+
+        if (filters.from && (!orderDate || orderDate < filters.from)) {
+            return false;
+        }
+
+        if (filters.to && (!orderDate || orderDate > filters.to)) {
+            return false;
+        }
+
+        if (filters.search) {
+            const haystack = [
+                order.OrderCode,
+                order.CustomerName,
+                order.PackerND,
+                order.PackerNDCode,
+                order.DelivererNG,
+                order.DelivererNGCode,
+                order.Status
+            ]
+                .map((value) => String(value || "").toLowerCase())
+                .join(" ");
+
+            if (!haystack.includes(filters.search)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    function updateStatusLine(customText) {
+        const statusElement = byId("status");
+
+        if (customText) {
+            statusElement.textContent = customText;
+            return;
+        }
+
+        const realtimeText = state.realtimeChannel ? "Realtime: đang kết nối" : "Realtime: chưa kết nối";
+        const realtimeStamp = state.lastRealtimeStamp ? ` | Cập nhật realtime lúc ${state.lastRealtimeStamp}` : "";
+
+        statusElement.textContent = `Hiển thị ${state.filteredOrders.length}/${state.orders.length} đơn hàng | ${realtimeText}${realtimeStamp}`;
+    }
+
+    function applyFiltersAndRender() {
+        let from = byId("dateFrom").value;
+        let to = byId("dateTo").value;
+
+        if (from && to && from > to) {
+            const temp = from;
+            from = to;
+            to = temp;
+        }
+
+        const filters = {
+            search: byId("searchInput").value.trim().toLowerCase(),
+            status: byId("statusFilter").value,
+            from,
+            to
+        };
+
+        state.filteredOrders = state.orders.filter((order) => matchesFilters(order, filters));
+
+        renderByCurrentView();
+        renderDashboard();
+        updateStatusLine();
+    }
+
+    function clearFilters() {
+        byId("searchInput").value = "";
+        byId("statusFilter").value = "";
+        byId("dateFrom").value = "";
+        byId("dateTo").value = "";
+        applyFiltersAndRender();
+    }
+
+    function scheduleRealtimeReload() {
+        if (state.realtimeTimer) {
+            return;
+        }
+
+        state.realtimeTimer = setTimeout(async () => {
+            state.realtimeTimer = null;
+            await loadOrders(true);
+        }, 600);
+    }
+
+    async function teardownRealtime() {
+        if (!state.realtimeChannel || !supabaseClient) {
+            return;
+        }
+
+        await supabaseClient.removeChannel(state.realtimeChannel);
+        state.realtimeChannel = null;
+        state.lastRealtimeStamp = "";
+    }
+
+    async function setupRealtime() {
+        if (!supabaseClient) {
+            return;
+        }
+
+        await teardownRealtime();
+
+        state.realtimeChannel = supabaseClient
+            .channel("orders-live")
+            .on(
+                "postgres_changes",
+                {
+                    event: "*",
+                    schema: "public",
+                    table: TABLE_NAME
+                },
+                () => {
+                    state.lastRealtimeStamp = new Date().toLocaleTimeString("vi-VN", { hour12: false });
+                    scheduleRealtimeReload();
+                }
+            )
+            .subscribe((status) => {
+                if (status === "SUBSCRIBED") {
+                    updateStatusLine();
+                }
+            });
+    }
+
+    async function loadOrders(fromRealtime) {
+        if (!supabaseClient || !state.session) {
+            return;
+        }
+
+        updateStatusLine(fromRealtime ? "Đang đồng bộ realtime..." : "Đang tải dữ liệu...");
+
+        const queryAttempts = [
+            () => supabaseClient.from(TABLE_NAME).select("*").order("CreatedAt", { ascending: false }),
+            () => supabaseClient.from(TABLE_NAME).select("*").order("OrderDate", { ascending: false }),
+            () => supabaseClient.from(TABLE_NAME).select("*")
+        ];
+
+        let result = null;
+
+        for (const attempt of queryAttempts) {
+            result = await attempt();
+            if (!result.error) {
+                break;
+            }
+        }
+
+        if (!result || result.error) {
+            updateStatusLine(`Không thể tải dữ liệu: ${(result && result.error && result.error.message) || "Unknown error"}`);
+            return;
+        }
+
+        state.orders = Array.isArray(result.data)
+            ? result.data.map((order) => normalizeOrderRecord(order))
+            : [];
+        buildStatusFilterOptions();
+        applyFiltersAndRender();
+    }
+
+    function exportExcel() {
+        if (!state.filteredOrders.length) {
+            alert("Không có dữ liệu để xuất Excel.");
+            return;
+        }
+
+        if (!window.XLSX) {
+            alert("Không tải được thư viện xuất Excel.");
+            return;
+        }
+
+        const rows = state.filteredOrders.map((order, index) => ({
+            STT: index + 1,
+            MaDon: order.OrderCode || "",
+            Ngay: formatDate(order.OrderDate || order.CreatedAt),
+            KhachHang: order.CustomerName || "",
+            SoKien: order.QuantitySK ?? "",
+            NguoiDong: order.PackerND || "",
+            NguoiGiao: order.DelivererNG || "",
+            TrangThai: order.Status || "",
+            ImagePath: order.ImagePath || ""
+        }));
+
+        const sheet = XLSX.utils.json_to_sheet(rows);
+        const workbook = XLSX.utils.book_new();
+
+        XLSX.utils.book_append_sheet(workbook, sheet, "Orders");
+
+        const now = new Date();
+        const fileName = `orders_${now.getFullYear()}${pad2(now.getMonth() + 1)}${pad2(now.getDate())}_${pad2(now.getHours())}${pad2(now.getMinutes())}.xlsx`;
+
+        XLSX.writeFile(workbook, fileName);
+    }
+
+    function openImageModal(imageUrl, caption) {
+        if (!imageUrl) {
+            return;
+        }
+
+        byId("modalImage").src = imageUrl;
+        byId("modalCaption").textContent = caption || "";
+        byId("imageModal").classList.add("show");
+        syncBodyOverflow();
+    }
+
+    function closeImageModal() {
+        byId("imageModal").classList.remove("show");
+        byId("modalImage").src = "";
+        syncBodyOverflow();
+    }
+
+    async function applySession(session) {
+        state.session = session || null;
+
+        const authenticated = Boolean(state.session && state.session.user);
+
+        byId("currentUser").textContent = authenticated
+            ? `👤 ${state.session.user.email || "Đã đăng nhập"}`
+            : "Chưa đăng nhập";
+
+        byId("refreshBtn").disabled = !authenticated;
+        byId("exportBtn").disabled = !authenticated;
+        byId("logoutBtn").disabled = !authenticated;
+
+        byId("loginPanel").classList.toggle("hidden", authenticated);
+        byId("appPanel").classList.toggle("hidden", !authenticated);
+
+        if (!authenticated) {
+            await teardownRealtime();
+            destroyAllCharts();
+            closeEditModal();
+            closeImageModal();
+            state.orders = [];
+            state.filteredOrders = [];
+            state.employees = [];
+            byId("ordersGrid").innerHTML = "";
+            byId("ordersTableBody").innerHTML = "";
+            byId("kpiTotalOrders").textContent = "0";
+            byId("kpiCompleted").textContent = "0";
+            byId("kpiProcessing").textContent = "0";
+            byId("kpiFailed").textContent = "0";
+            buildStatusFilterOptions();
+            renderEmployeeSelectOptions();
+            setLoginMessage("", false);
+            return;
+        }
+
+        setLoginMessage("", false);
+        await loadEmployees();
+        await loadOrders(false);
+        await setupRealtime();
+    }
+
+    async function loginWithEmailPassword(event) {
+        event.preventDefault();
+
+        if (!supabaseClient) {
+            setLoginMessage("Không thể khởi tạo Supabase client.", true);
+            return;
+        }
+
+        const email = byId("emailInput").value.trim();
+        const password = byId("passwordInput").value;
+
+        if (!email || !password) {
+            setLoginMessage("Vui lòng nhập email và mật khẩu.", true);
+            return;
+        }
+
+        byId("loginBtn").disabled = true;
+        setLoginMessage("Đang đăng nhập...", false);
+
+        const { error } = await supabaseClient.auth.signInWithPassword({
+            email,
+            password
+        });
+
+        byId("loginBtn").disabled = false;
+
+        if (error) {
+            setLoginMessage(`Đăng nhập thất bại: ${error.message}`, true);
+            return;
+        }
+
+        setLoginMessage("Đăng nhập thành công.", false);
+    }
+
     async function logout() {
-      await supabase.auth.signOut();
-      checkAuthSession();
+        if (!supabaseClient) {
+            return;
+        }
+
+        const { error } = await supabaseClient.auth.signOut();
+        if (error) {
+            alert(`Đăng xuất lỗi: ${error.message}`);
+        }
     }
 
-    // Tự động kiểm tra trạng thái khi tải trang
-    checkAuthSession();
-  </script>
+    function bindEvents() {
+        byId("loginForm").addEventListener("submit", loginWithEmailPassword);
+        byId("editOrderForm").addEventListener("submit", saveOrderEdit);
+        byId("logoutBtn").addEventListener("click", logout);
+        byId("refreshBtn").addEventListener("click", () => loadOrders(false));
+        byId("exportBtn").addEventListener("click", exportExcel);
+        byId("clearFiltersBtn").addEventListener("click", clearFilters);
+        byId("gridViewBtn").addEventListener("click", () => setView("grid"));
+        byId("tableViewBtn").addEventListener("click", () => setView("table"));
+        byId("editCancelBtn").addEventListener("click", closeEditModal);
+        byId("editModalClose").addEventListener("click", closeEditModal);
+        byId("editDeleteBtn").addEventListener("click", async () => {
+            const editingOrder = state.orders.find((order) => String(orderIdValue(order)) === state.editingOrderId);
+
+            if (!editingOrder) {
+                setEditMessage("Không tìm thấy order hiện tại để xóa.", true);
+                return;
+            }
+
+            await deleteOrder(editingOrder);
+        });
+        byId("editPackerEmployee").addEventListener("change", () => applyEmployeeFromSelect("packer"));
+        byId("editDelivererEmployee").addEventListener("change", () => applyEmployeeFromSelect("deliverer"));
+
+        const onSearch = debounce(() => {
+            applyFiltersAndRender();
+        }, 220);
+
+        byId("searchInput").addEventListener("input", onSearch);
+        byId("statusFilter").addEventListener("change", applyFiltersAndRender);
+        byId("dateFrom").addEventListener("change", applyFiltersAndRender);
+        byId("dateTo").addEventListener("change", applyFiltersAndRender);
+
+        byId("dashboardDayModeBtn").addEventListener("click", () => setDashboardMode("day"));
+        byId("dashboardMonthModeBtn").addEventListener("click", () => setDashboardMode("month"));
+        byId("dashboardExplodeToggle").addEventListener("change", (event) => {
+            setDashboardExplode(event.target.checked);
+        });
+        byId("dashboardDay").addEventListener("change", renderDashboard);
+        byId("dashboardMonth").addEventListener("change", renderDashboard);
+
+        byId("editModal").addEventListener("click", (event) => {
+            if (event.target.id === "editModal") {
+                closeEditModal();
+            }
+        });
+
+        byId("imageModal").addEventListener("click", (event) => {
+            if (event.target.id === "imageModal") {
+                closeImageModal();
+            }
+        });
+
+        byId("imageModalClose").addEventListener("click", closeImageModal);
+        byId("modalImage").addEventListener("click", (event) => {
+            event.stopPropagation();
+        });
+
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
+                if (byId("editModal").classList.contains("show")) {
+                    closeEditModal();
+                    return;
+                }
+
+                if (byId("imageModal").classList.contains("show")) {
+                    closeImageModal();
+                }
+            }
+        });
+    }
+
+    async function init() {
+        bindEvents();
+        renderEmployeeSelectOptions();
+        buildStatusFilterOptions();
+
+        const today = new Date();
+        byId("dashboardDay").value = toIsoDate(today);
+        byId("dashboardMonth").value = `${today.getFullYear()}-${pad2(today.getMonth() + 1)}`;
+        byId("dashboardExplodeToggle").checked = false;
+        state.dashboardExplode = false;
+        setDashboardMode("day");
+
+        if (!supabaseClient) {
+            setLoginMessage("Không tải được thư viện Supabase.", true);
+            return;
+        }
+
+        const { data, error } = await supabaseClient.auth.getSession();
+
+        if (error) {
+            setLoginMessage(`Không thể lấy session: ${error.message}`, true);
+        }
+
+        await applySession((data && data.session) || null);
+
+        supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+            await applySession(session);
+        });
+    }
+
+    init();
+</script>
 </body>
 </html>
