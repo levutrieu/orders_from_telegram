@@ -3,19 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orders Dashboard</title>
+    <title>Tân Phong - Đóng hàng & Giao hàng</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E📦%3C/text%3E%3C/svg%3E">
 
     <style>
         :root {
-            --bg: #f5f6f8;
-            --panel: #ffffff;
-            --text: #222;
-            --muted: #64748b;
-            --brand: #2563eb;
-            --brand-hover: #1d4ed8;
-            --danger: #dc2626;
-            --border: #e5e7eb;
-            --header: #111827;
+            --bg: #f4f6fb;             /* Nền xám trắng công nghệ dịu mắt */
+            --panel: #ffffff;          /* Card/Panel trắng tinh tế */
+            --panel-secondary: #eef2f8;/* Panel phụ xám xanh nhạt */
+            --text: #0f172a;           /* Chữ xanh đen đậm nét, cực kỳ dễ đọc */
+            --muted: #64748b;          /* Chữ phụ xám trung tính */
+            --brand: #0088cc;          /* Xanh Cyan/Tech Blue đậm đà trên nền sáng */
+            --brand-hover: #006699;    /* Hover xanh đậm hơn */
+            --brand-glow: rgba(0, 136, 204, 0.25); /* Hiệu ứng tỏa sáng nhẹ */
+            --accent: #6d28d9;         /* Tím Neon đậm */
+            --danger: #e11d48;         /* Đỏ dâu highlight lỗi */
+            --danger-hover: #be123c;
+            --border: #cbd5e1;         /* Đường viền xám mỏng */
+            --border-glow: rgba(0, 136, 204, 0.35); /* Viền highlight Tech */
+            --header: #0f172a;         /* Thanh điều hướng xanh đen tối để tương phản mạnh */
         }
 
         * {
@@ -24,25 +30,37 @@
 
         body {
             margin: 0;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
             background: var(--bg);
             color: var(--text);
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(0, 136, 204, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(109, 40, 217, 0.06) 0%, transparent 40%);
+            background-attachment: fixed;
         }
 
         .header {
+            position: sticky;          /* Cố định header khi cuộn */
+            top: 0;                    /* Dính vào mép trên cùng */
+            z-index: 1000;             /* Đảm bảo header nằm trên các phần tử khác */
             background: var(--header);
-            color: white;
-            padding: 18px 24px;
+            color: #ffffff;
+            padding: 12px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 14px;
             flex-wrap: wrap;
+            border-bottom: 2px solid var(--brand);
+            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.15);
         }
 
         .header h1 {
             margin: 0;
             font-size: 20px;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+            text-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
         }
 
         .header-actions {
@@ -55,46 +73,63 @@
         .user-badge {
             display: inline-flex;
             align-items: center;
-            padding: 7px 12px;
-            background: rgba(255, 255, 255, 0.12);
+            padding: 7px 14px;
+            background: rgba(0, 240, 255, 0.12);
+            border: 1px solid rgba(0, 240, 255, 0.3);
             border-radius: 999px;
             font-size: 13px;
-            color: #e5e7eb;
+            color: #00f0ff;
         }
 
         button {
-            border: 0;
-            background: var(--brand);
-            color: white;
+            border: 1px solid var(--brand);
+            background: rgba(0, 136, 204, 0.08);
+            color: var(--brand);
             padding: 9px 16px;
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
+            letter-spacing: 0.3px;
+            transition: all 0.2s ease-in-out;
         }
 
         button:hover {
-            background: var(--brand-hover);
+            background: var(--brand);
+            color: #ffffff;
+            box-shadow: 0 4px 12px var(--brand-glow);
         }
 
         button:disabled {
-            opacity: 0.55;
+            opacity: 0.4;
             cursor: not-allowed;
+            box-shadow: none;
+            border-color: var(--border);
+            color: var(--muted);
         }
 
         button.secondary {
-            background: #334155;
+            background: var(--panel);
+            border-color: var(--border);
+            color: var(--text);
         }
 
         button.secondary:hover {
-            background: #1e293b;
+            background: var(--panel-secondary);
+            border-color: var(--muted);
+            color: var(--text);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
         button.danger {
-            background: var(--danger);
+            background: rgba(225, 29, 72, 0.08);
+            border-color: var(--danger);
+            color: var(--danger);
         }
 
         button.danger:hover {
-            background: #b91c1c;
+            background: var(--danger);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(225, 29, 72, 0.25);
         }
 
         .container {
@@ -113,12 +148,14 @@
             background: var(--panel);
             border-radius: 12px;
             padding: 24px;
-            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05), 0 0 15px var(--brand-glow);
         }
 
         .login-panel h2 {
             margin: 0 0 14px;
             font-size: 22px;
+            color: var(--brand);
         }
 
         .login-form {
@@ -130,7 +167,7 @@
             display: grid;
             gap: 6px;
             font-size: 14px;
-            color: #334155;
+            color: var(--muted);
             font-weight: 600;
         }
 
@@ -142,11 +179,14 @@
             padding: 0 12px;
             font-size: 14px;
             outline: none;
+            background: var(--panel);
+            color: var(--text);
+            transition: all 0.2s ease;
         }
 
         .login-form input:focus {
             border-color: var(--brand);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+            box-shadow: 0 0 8px var(--brand-glow);
         }
 
         .login-message {
@@ -156,17 +196,67 @@
         }
 
         .login-message.error-text {
-            color: #b91c1c;
+            color: var(--danger);
         }
 
         .login-message.ok-text {
-            color: #166534;
+            color: #16a34a;
         }
 
         .status-bar {
-            margin-bottom: 14px;
-            color: #334155;
+            margin-bottom: 10px;
+            color: var(--muted);
             font-weight: 600;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+
+        /* Thanh chứa tabs kiểu Segmented Container */
+        .app-tabs {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 16px;
+            background: var(--panel-secondary);
+            padding: 5px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.03);
+        }
+
+        /* Nút Tab kiểu Cyber-Pill */
+        .app-tab-btn {
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--muted);
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            box-shadow: none;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .app-tab-btn:hover {
+            background: rgba(255, 255, 255, 0.6);
+            color: var(--text);
+            border-color: rgba(203, 213, 225, 0.5);
+        }
+
+        /* Tab Active - Nổi bật với hiệu ứng thẻ trượt & viền phát sáng */
+        .app-tab-btn.active {
+            background: var(--panel);
+            color: var(--brand);
+            border-color: var(--brand);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 0 10px var(--brand-glow);
+            transform: translateY(-1px);
+        }
+
+        .app-tab-panel {
+            display: block;
         }
 
         .toolbar {
@@ -180,6 +270,7 @@
             gap: 12px;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
         }
 
         .filters {
@@ -198,13 +289,15 @@
             padding: 0 10px;
             font-size: 14px;
             outline: none;
-            background: white;
+            background: var(--panel);
+            color: var(--text);
+            transition: all 0.2s;
         }
 
         .filters input:focus,
         .filters select:focus {
             border-color: var(--brand);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.17);
+            box-shadow: 0 0 8px var(--brand-glow);
         }
 
         #searchInput {
@@ -217,15 +310,23 @@
             border: 1px solid var(--border);
             border-radius: 9px;
             overflow: hidden;
+            background: var(--panel-secondary);
+        }
+
+        .list-view-switch-wrap {
+            display: flex;
+            justify-content: flex-end;
         }
 
         .view-switch .toggle {
             border-radius: 0;
+            border: none;
             border-right: 1px solid var(--border);
-            background: white;
-            color: #0f172a;
+            background: transparent;
+            color: var(--muted);
             min-width: 92px;
             font-weight: 700;
+            box-shadow: none;
         }
 
         .view-switch .toggle:last-child {
@@ -233,8 +334,9 @@
         }
 
         .view-switch .toggle.active {
-            background: #0f172a;
-            color: white;
+            background: var(--panel);
+            color: var(--brand);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
 
         .dashboard {
@@ -243,11 +345,13 @@
             background: var(--panel);
             padding: 14px;
             margin-bottom: 18px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
         }
 
         .dashboard-head h2 {
             margin: 0;
             font-size: 19px;
+            color: var(--brand);
         }
 
         .dashboard-head p {
@@ -266,19 +370,21 @@
 
         .dashboard-mode-switch {
             display: inline-flex;
-            border: 1px solid #cbd5e1;
+            border: 1px solid var(--border);
             border-radius: 9px;
             overflow: hidden;
-            background: white;
+            background: var(--panel-secondary);
         }
 
         .dashboard-mode-btn {
             border-radius: 0;
-            background: white;
-            color: #0f172a;
+            border: none;
+            background: transparent;
+            color: var(--muted);
             min-width: 130px;
-            border-right: 1px solid #cbd5e1;
+            border-right: 1px solid var(--border);
             font-weight: 700;
+            box-shadow: none;
         }
 
         .dashboard-mode-btn:last-child {
@@ -286,18 +392,9 @@
         }
 
         .dashboard-mode-btn.active {
-            background: #0f172a;
-            color: white;
-        }
-
-        .dashboard-mode-btn:hover {
-            background: #e2e8f0;
-            color: #0f172a;
-        }
-
-        .dashboard-mode-btn.active:hover {
-            background: #0f172a;
-            color: white;
+            background: var(--panel);
+            color: var(--brand);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
 
         .dashboard-mode-panel {
@@ -308,44 +405,42 @@
             display: inline-flex;
             align-items: flex-start;
             gap: 10px;
-            border: 1px solid #cbd5e1;
+            border: 1px solid var(--border);
             border-radius: 10px;
-            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            background: var(--panel-secondary);
             padding: 8px 12px;
-            color: #0f172a;
+            color: var(--text);
             min-height: 40px;
             cursor: pointer;
             user-select: none;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+            transition: all 0.2s ease;
         }
 
         .dashboard-explode-toggle:hover {
-            border-color: #93c5fd;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+            border-color: var(--brand);
         }
 
         .dashboard-explode-text {
-            display: grid;
-            gap: 2px;
+            gap: 5px;
             line-height: 1.2;
         }
 
         .dashboard-explode-title {
-            color: #0f172a;
+            color: var(--brand);
             font-size: 13px;
             font-weight: 700;
         }
 
         .dashboard-explode-desc {
-            color: #64748b;
-            font-size: 12px;
+            color: var(--muted);
+            font-size: 10px;
             font-weight: 500;
         }
 
         .dashboard-explode-toggle input {
             width: 16px;
             height: 16px;
-            accent-color: #2563eb;
+            accent-color: var(--brand);
             margin: 1px 0 0;
             cursor: pointer;
             flex-shrink: 0;
@@ -355,7 +450,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            color: #334155;
+            color: var(--muted);
             font-weight: 600;
             font-size: 14px;
         }
@@ -367,6 +462,8 @@
             height: 38px;
             padding: 0 10px;
             outline: none;
+            background: var(--panel);
+            color: var(--text);
         }
 
         .kpi-grid {
@@ -377,24 +474,33 @@
         }
 
         .kpi-card {
-            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-            border: 1px solid #e2e8f0;
+            background: var(--panel-secondary);
+            border: 1px solid var(--border);
             border-radius: 10px;
             padding: 10px 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 3px;
+            background: linear-gradient(90deg, var(--brand), var(--accent));
         }
 
         .kpi-label {
             margin: 0;
-            color: #64748b;
+            color: var(--muted);
             font-size: 12px;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.4px;
+            letter-spacing: 0.8px;
         }
 
         .kpi-value {
             margin: 6px 0 0;
-            color: #0f172a;
+            color: var(--text);
             font-size: 28px;
             font-weight: 800;
         }
@@ -407,9 +513,9 @@
         }
 
         .chart-card {
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border);
             border-radius: 10px;
-            background: #ffffff;
+            background: var(--panel);
             padding: 12px;
         }
 
@@ -420,7 +526,7 @@
         .chart-card h3 {
             margin: 0 0 10px;
             font-size: 15px;
-            color: #1f2937;
+            color: var(--brand);
         }
 
         .chart-canvas-wrap {
@@ -434,11 +540,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #64748b;
-            border: 1px dashed #cbd5e1;
+            color: var(--muted);
+            border: 1px dashed var(--border);
             border-radius: 8px;
             font-size: 13px;
-            background: #f8fafc;
+            background: var(--panel-secondary);
             text-align: center;
             padding: 8px;
         }
@@ -450,8 +556,8 @@
         }
 
         .dash-card {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
+            background: var(--panel);
+            border: 1px solid var(--border);
             border-radius: 10px;
             padding: 12px;
         }
@@ -459,6 +565,7 @@
         .dash-card h3 {
             margin: 0 0 10px;
             font-size: 16px;
+            color: var(--text);
         }
 
         .dash-cols {
@@ -470,7 +577,7 @@
         .dash-cols h4 {
             margin: 0 0 6px;
             font-size: 14px;
-            color: #1f2937;
+            color: var(--brand);
         }
 
         .stats-empty {
@@ -478,16 +585,16 @@
             color: var(--muted);
             padding: 8px;
             text-align: center;
-            border: 1px dashed #cbd5e1;
+            border: 1px dashed var(--border);
             border-radius: 8px;
-            background: white;
+            background: var(--panel-secondary);
         }
 
         .mini-table {
             width: 100%;
             border-collapse: collapse;
-            background: white;
-            border: 1px solid #e2e8f0;
+            background: transparent;
+            border: 1px solid var(--border);
             border-radius: 8px;
             overflow: hidden;
         }
@@ -496,13 +603,13 @@
         .mini-table td {
             padding: 6px 8px;
             text-align: left;
-            border-bottom: 1px solid #f1f5f9;
+            border-bottom: 1px solid var(--border);
             font-size: 13px;
         }
 
         .mini-table th {
-            background: #f1f5f9;
-            color: #475569;
+            background: var(--panel-secondary);
+            color: var(--brand);
         }
 
         .orders {
@@ -515,24 +622,32 @@
             background: var(--panel);
             border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
-            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .order-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--brand);
+            box-shadow: 0 6px 16px rgba(0, 136, 204, 0.12);
         }
 
         .order-image {
             width: 100%;
             height: 230px;
             object-fit: cover;
-            background: #eee;
+            background: var(--panel-secondary);
             display: block;
             cursor: pointer;
+            border-bottom: 1px solid var(--border);
         }
 
         .order-content {
             padding: 10px;
             display: grid;
             gap: 2px;
-            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            background: var(--panel);
         }
 
         .order-code {
@@ -540,10 +655,11 @@
             font-weight: 800;
             margin: 0;
             padding: 8px 10px;
-            border: 1px solid #dbeafe;
+            border: 1px solid rgba(0, 136, 204, 0.2);
             border-radius: 8px;
-            background: #eff6ff;
-            color: #1e3a8a;
+            background: rgba(0, 136, 204, 0.05);
+            color: var(--brand);
+            letter-spacing: 0.5px;
         }
 
         .card-actions {
@@ -552,7 +668,7 @@
             justify-content: flex-end;
             gap: 6px;
             padding-top: 8px;
-            border-top: 1px dashed #cbd5e1;
+            border-top: 1px dashed var(--border);
         }
 
         .edit-btn,
@@ -579,7 +695,7 @@
 
         .label {
             width: 105px;
-            color: #475569;
+            color: var(--muted);
             font-size: 13px;
             font-weight: 700;
             flex-shrink: 0;
@@ -587,7 +703,7 @@
 
         .value {
             font-weight: 600;
-            color: #0f172a;
+            color: var(--text);
             line-height: 1.35;
             min-width: 0;
             word-break: break-word;
@@ -595,38 +711,45 @@
 
         .status {
             display: inline-block;
-            padding: 4px 9px;
+            padding: 4px 10px;
             border-radius: 20px;
             font-size: 12px;
-            background: #e5e7eb;
-            color: #111827;
+            font-weight: 700;
+            background: var(--panel-secondary);
+            color: var(--text);
+            border: 1px solid var(--border);
         }
 
         .status.completed {
             background: #dcfce7;
-            color: #166534;
+            color: #15803d;
+            border-color: #86efac;
         }
 
         .status.processing {
             background: #fef3c7;
-            color: #92400e;
+            color: #b45309;
+            border-color: #fde68a;
         }
 
         .status.failed {
-            background: #fee2e2;
-            color: #991b1b;
+            background: #ffe4e6;
+            color: #be123c;
+            border-color: #fecdd3;
         }
 
         .status.unknown {
-            background: #e5e7eb;
-            color: #374151;
+            background: var(--panel-secondary);
+            color: var(--muted);
+            border-color: var(--border);
         }
 
         .table-wrap {
             border: 1px solid var(--border);
             border-radius: 10px;
             overflow: auto;
-            background: white;
+            background: var(--panel);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
         }
 
         .orders-table {
@@ -638,7 +761,7 @@
         .orders-table th,
         .orders-table td {
             padding: 10px;
-            border-bottom: 1px solid #f1f5f9;
+            border-bottom: 1px solid var(--border);
             text-align: left;
             vertical-align: middle;
             font-size: 14px;
@@ -647,14 +770,14 @@
         .orders-table th {
             position: sticky;
             top: 0;
-            background: #f8fafc;
-            color: #334155;
+            background: var(--panel-secondary);
+            color: var(--brand);
             z-index: 1;
         }
 
         .orders-table td.strong {
             font-weight: 700;
-            color: #0f172a;
+            color: var(--text);
         }
 
         .table-empty {
@@ -670,6 +793,7 @@
             cursor: pointer;
             padding: 0;
             font-weight: 700;
+            box-shadow: none;
         }
 
         .link-btn:hover {
@@ -683,11 +807,166 @@
             gap: 6px;
         }
 
+        .admin-section {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--panel);
+            padding: 14px;
+            display: grid;
+            gap: 14px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+        }
+
+        .admin-head {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .admin-head-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .admin-head h2 {
+            margin: 0;
+            font-size: 19px;
+            color: var(--brand);
+        }
+
+        .admin-head p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .admin-form {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            background: var(--panel-secondary);
+            display: grid;
+            gap: 10px;
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .admin-grid label {
+            display: grid;
+            gap: 6px;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .admin-grid input,
+        .admin-grid select,
+        .admin-grid textarea {
+            height: 38px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0 10px;
+            outline: none;
+            background: var(--panel);
+            font-size: 14px;
+            color: var(--text);
+            width: 100%;
+        }
+
+        .admin-grid textarea {
+            min-height: 78px;
+            height: auto;
+            resize: vertical;
+            padding: 8px 10px;
+        }
+
+        .admin-grid input:focus,
+        .admin-grid select:focus,
+        .admin-grid textarea:focus {
+            border-color: var(--brand);
+            box-shadow: 0 0 8px var(--brand-glow);
+        }
+
+        .admin-checkbox {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--text);
+            font-weight: 700;
+            margin-top: 28px;
+        }
+
+        .admin-checkbox input {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            accent-color: var(--brand);
+        }
+
+        .form-message {
+            margin: 0;
+            min-height: 20px;
+            font-size: 14px;
+        }
+
+        .form-message.error-text {
+            color: var(--danger);
+        }
+
+        .form-message.ok-text {
+            color: #16a34a;
+        }
+
+        .admin-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .admin-table {
+            width: 100%;
+            min-width: 1080px;
+            border-collapse: collapse;
+        }
+
+        .admin-table th,
+        .admin-table td {
+            padding: 10px;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+            vertical-align: middle;
+            font-size: 14px;
+        }
+
+        .admin-table th {
+            position: sticky;
+            top: 0;
+            background: var(--panel-secondary);
+            color: var(--brand);
+            z-index: 1;
+        }
+
+        .admin-key {
+            font-family: 'Fira Code', Consolas, Monaco, monospace;
+            color: var(--brand);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
         .empty {
             text-align: center;
             padding: 50px;
-            color: #777;
-            background: white;
+            color: var(--muted);
+            background: var(--panel);
             border-radius: 10px;
             border: 1px solid var(--border);
         }
@@ -697,7 +976,8 @@
             position: fixed;
             z-index: 9999;
             inset: 0;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(6px);
             align-items: center;
             justify-content: center;
             padding: 30px;
@@ -712,7 +992,8 @@
             max-height: 90vh;
             object-fit: contain;
             border-radius: 8px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
         .image-modal-close {
@@ -721,19 +1002,20 @@
             right: 25px;
             width: 45px;
             height: 45px;
-            border: none;
+            border: 1px solid #ffffff;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.15);
-            color: white;
+            background: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
             font-size: 32px;
-            line-height: 45px;
+            line-height: 43px;
             cursor: pointer;
             padding: 0;
             z-index: 10000;
         }
 
         .image-modal-close:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: #ffffff;
+            color: #000000;
         }
 
         .image-modal-caption {
@@ -742,8 +1024,9 @@
             left: 0;
             right: 0;
             text-align: center;
-            color: white;
+            color: #ffffff;
             font-size: 14px;
+            letter-spacing: 0.5px;
         }
 
         .edit-modal {
@@ -751,7 +1034,8 @@
             position: fixed;
             inset: 0;
             z-index: 10001;
-            background: rgba(15, 23, 42, 0.62);
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
             align-items: center;
             justify-content: center;
             padding: 18px;
@@ -766,10 +1050,10 @@
             max-width: 980px;
             max-height: 90vh;
             overflow: auto;
-            background: #ffffff;
+            background: var(--panel);
             border-radius: 12px;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 14px 50px rgba(2, 6, 23, 0.25);
+            border: 1px solid var(--border);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
         }
 
         .edit-header {
@@ -778,26 +1062,26 @@
             align-items: center;
             gap: 8px;
             padding: 14px 16px;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--border);
             position: sticky;
             top: 0;
-            background: #ffffff;
+            background: var(--panel);
             z-index: 2;
         }
 
         .edit-header h3 {
             margin: 0;
             font-size: 18px;
-            color: #0f172a;
+            color: var(--brand);
         }
 
         .close-btn {
             width: 36px;
             height: 36px;
             border-radius: 999px;
-            border: 1px solid #cbd5e1;
-            background: #ffffff;
-            color: #1e293b;
+            border: 1px solid var(--border);
+            background: var(--panel-secondary);
+            color: var(--text);
             font-size: 24px;
             line-height: 1;
             cursor: pointer;
@@ -808,7 +1092,8 @@
         }
 
         .close-btn:hover {
-            background: #f8fafc;
+            background: var(--brand);
+            color: #ffffff;
         }
 
         .edit-form {
@@ -827,7 +1112,7 @@
         .employee-card label {
             display: grid;
             gap: 6px;
-            color: #334155;
+            color: var(--muted);
             font-size: 13px;
             font-weight: 700;
         }
@@ -837,13 +1122,13 @@
         .employee-card input,
         .employee-card select {
             height: 38px;
-            border: 1px solid #cbd5e1;
+            border: 1px solid var(--border);
             border-radius: 8px;
             padding: 0 10px;
             outline: none;
-            background: #ffffff;
+            background: var(--panel);
             font-size: 14px;
-            color: #0f172a;
+            color: var(--text);
         }
 
         .edit-grid select[multiple],
@@ -861,10 +1146,11 @@
 
         .employee-card .ts-control {
             min-height: 38px;
-            border: 1px solid #cbd5e1;
+            border: 1px solid var(--border);
             border-radius: 8px;
             padding: 5px 8px;
-            background: #ffffff;
+            background: var(--panel);
+            color: var(--text);
             box-shadow: none;
         }
 
@@ -874,13 +1160,15 @@
 
         .employee-card .ts-wrapper.focus .ts-control {
             border-color: var(--brand);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.17);
+            box-shadow: 0 0 8px var(--brand-glow);
         }
 
         .employee-card .ts-dropdown {
-            border: 1px solid #cbd5e1;
+            border: 1px solid var(--border);
             border-radius: 8px;
             overflow: hidden;
+            background: var(--panel);
+            color: var(--text);
         }
 
         .employee-card .ts-dropdown .option {
@@ -892,8 +1180,8 @@
 
         .edit-grid input[readonly],
         .employee-card input[readonly] {
-            background: #f1f5f9;
-            color: #475569;
+            background: var(--panel-secondary);
+            color: var(--muted);
             cursor: not-allowed;
         }
 
@@ -902,7 +1190,7 @@
         .employee-card input:focus,
         .employee-card select:focus {
             border-color: var(--brand);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.17);
+            box-shadow: 0 0 8px var(--brand-glow);
         }
 
         .employee-grid {
@@ -912,10 +1200,10 @@
         }
 
         .employee-card {
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border);
             border-radius: 10px;
             padding: 10px;
-            background: #f8fafc;
+            background: var(--panel-secondary);
             display: grid;
             gap: 8px;
         }
@@ -923,12 +1211,12 @@
         .employee-card h4 {
             margin: 0;
             font-size: 15px;
-            color: #0f172a;
+            color: var(--brand);
         }
 
         .edit-hint {
             margin: 0;
-            color: #64748b;
+            color: var(--muted);
             font-size: 13px;
         }
 
@@ -939,11 +1227,11 @@
         }
 
         .edit-message.error-text {
-            color: #b91c1c;
+            color: var(--danger);
         }
 
         .edit-message.ok-text {
-            color: #166534;
+            color: #16a34a;
         }
 
         .edit-actions {
@@ -974,6 +1262,10 @@
                 grid-template-columns: 1fr;
             }
 
+            .admin-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
             .edit-grid,
             .employee-grid {
                 grid-template-columns: 1fr;
@@ -1000,11 +1292,32 @@
             .view-switch .toggle {
                 flex: 1;
             }
+
+            .list-view-switch-wrap {
+                justify-content: stretch;
+            }
+
+            .app-tabs {
+                width: 100%;
+            }
+
+            .app-tab-btn {
+                flex: 1;
+                text-align: center;
+            }
+
+            .admin-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-checkbox {
+                margin-top: 2px;
+            }
         }
 
         @media (max-width: 600px) {
             .header {
-                padding: 15px;
+                padding: 10px;
             }
 
             .kpi-grid {
@@ -1022,7 +1335,7 @@
 
 <body>
 <header class="header">
-    <h1>📦 Danh sách đơn hàng</h1>
+    <h1>📦 Đóng hàng & Giao hàng</h1>
 
     <div class="header-actions">
         <span id="currentUser" class="user-badge">Chưa đăng nhập</span>
@@ -1056,162 +1369,243 @@
     <section id="appPanel" class="hidden">
         <div id="status" class="status-bar">Đang khởi tạo...</div>
 
-        <div class="toolbar">
-            <div class="filters">
-                <input id="searchInput" type="search" placeholder="Tìm theo mã đơn, khách hàng, người đóng, người giao...">
-
-                <select id="statusFilter">
-                    <option value="">Tất cả trạng thái</option>
-                </select>
-
-                <input id="dateFrom" type="date" title="Từ ngày">
-                <input id="dateTo" type="date" title="Đến ngày">
-
-                <button id="clearFiltersBtn" type="button" class="secondary">Xóa lọc</button>
-            </div>
-
-            <div class="view-switch">
-                <button id="gridViewBtn" type="button" class="toggle active">Grid</button>
-                <button id="tableViewBtn" type="button" class="toggle">Table</button>
-            </div>
+        <div class="app-tabs">
+            <button id="appTabDashboardBtn" type="button" class="app-tab-btn active">Dashboard</button>
+            <button id="appTabOrdersBtn" type="button" class="app-tab-btn">Đơn hàng</button>
+            <button id="appTabEmployeesBtn" type="button" class="app-tab-btn">Nhân viên</button>
+            <button id="appTabApiKeysBtn" type="button" class="app-tab-btn">Cấu hình AI</button>
         </div>
 
-        <section class="dashboard">
-            <div class="dashboard-head">
-                <h2>Dashboard theo người đóng và người giao</h2>
-                <p>Dữ liệu dashboard tự động cập nhật theo bộ lọc hiện tại và realtime.</p>
-            </div>
+        <section id="ordersTab" class="app-tab-panel">
+            <div class="toolbar">
+                <div class="filters">
+                    <input id="searchInput" type="search" placeholder="Tìm theo mã đơn, khách hàng, người đóng, người giao...">
 
-            <div class="dashboard-controls">
-                <div class="dashboard-mode-switch">
-                    <button id="dashboardDayModeBtn" type="button" class="dashboard-mode-btn">Theo ngày</button>
-                    <button id="dashboardMonthModeBtn" type="button" class="dashboard-mode-btn active">Theo tháng</button>
+                    <select id="statusFilter">
+                        <option value="">Tất cả trạng thái</option>
+                    </select>
+
+                    <input id="dateFrom" type="date" title="Từ ngày">
+                    <input id="dateTo" type="date" title="Đến ngày">
+
+                    <button id="clearFiltersBtn" type="button" class="secondary">Xóa lọc</button>
+                </div>                
+
+                <div class="list-view-switch-wrap">
+                    <div class="view-switch">
+                        <button id="gridViewBtn" type="button" class="toggle active">Grid</button>
+                        <button id="tableViewBtn" type="button" class="toggle">Table</button>
+                    </div>
                 </div>
-
-                <div id="dashboardDayPanel" class="dashboard-mode-panel hidden">
-                    <label>
-                        Ngày:
-                        <input id="dashboardDay" type="date">
-                    </label>
-                </div>
-
-                <div id="dashboardMonthPanel" class="dashboard-mode-panel">
-                    <label>
-                        Tháng:
-                        <input id="dashboardMonth" type="month">
-                    </label>
-                </div>
-
-                <label class="dashboard-explode-toggle">
-                    <input id="dashboardExplodeToggle" type="checkbox">
-                    <span class="dashboard-explode-text">
-                        <span class="dashboard-explode-title">Tách người theo dấu +</span>
-                        <span class="dashboard-explode-desc">Ví dụ: DUNG + VĨ sẽ tính thành 2 đơn riêng.</span>
-                    </span>
-                </label>
             </div>
 
-            <div class="kpi-grid">
-                <article class="kpi-card">
-                    <p class="kpi-label">Tổng đơn đang hiển thị</p>
-                    <p id="kpiTotalOrders" class="kpi-value">0</p>
-                </article>
+            <div id="ordersGrid" class="orders"></div>
 
-                <article class="kpi-card">
-                    <p class="kpi-label">Hoàn thành</p>
-                    <p id="kpiCompleted" class="kpi-value">0</p>
-                </article>
-
-                <article class="kpi-card">
-                    <p class="kpi-label">Đang xử lý</p>
-                    <p id="kpiProcessing" class="kpi-value">0</p>
-                </article>
-
-                <article class="kpi-card">
-                    <p class="kpi-label">Thất bại</p>
-                    <p id="kpiFailed" class="kpi-value">0</p>
-                </article>
-            </div>
-
-            <div class="charts-grid">
-                <article class="chart-card">
-                    <h3>Phân bổ trạng thái</h3>
-                    <div class="chart-canvas-wrap">
-                        <canvas id="statusPieChart"></canvas>
-                        <div id="statusPieEmpty" class="chart-empty hidden">Không có dữ liệu để vẽ biểu đồ trạng thái.</div>
-                    </div>
-                </article>
-
-                <article class="chart-card">
-                    <h3>Top nhân sự theo số đơn</h3>
-                    <div class="chart-canvas-wrap">
-                        <canvas id="staffBarChart"></canvas>
-                        <div id="staffBarEmpty" class="chart-empty hidden">Không có dữ liệu để vẽ biểu đồ nhân sự.</div>
-                    </div>
-                </article>
-
-                <article class="chart-card wide">
-                    <h3 id="trendLineTitle">Xu hướng đơn theo tháng đã chọn </h3>
-                    <div class="chart-canvas-wrap">
-                        <canvas id="trendLineChart"></canvas>
-                        <div id="trendLineEmpty" class="chart-empty hidden">Chưa có dữ liệu theo tháng để vẽ xu hướng.</div>
-                    </div>
-                </article>
-            </div>
-
-            <div class="dashboard-grid">
-                <article id="monthlyStatsCard" class="dash-card">
-                    <h3 id="monthlySummary">Theo tháng</h3>
-                    <div class="dash-cols">
-                        <div>
-                            <h4>Người đóng</h4>
-                            <div id="monthlyPackerStats" class="stats-table"></div>
-                        </div>
-
-                        <div>
-                            <h4>Người giao</h4>
-                            <div id="monthlyDelivererStats" class="stats-table"></div>
-                        </div>
-                    </div>
-                </article>
-
-                <article id="dailyStatsCard" class="dash-card hidden">
-                    <h3 id="dailySummary">Theo ngày</h3>
-                    <div class="dash-cols">
-                        <div>
-                            <h4>Người đóng</h4>
-                            <div id="dailyPackerStats" class="stats-table"></div>
-                        </div>
-
-                        <div>
-                            <h4>Người giao</h4>
-                            <div id="dailyDelivererStats" class="stats-table"></div>
-                        </div>
-                    </div>
-                </article>
+            <div id="ordersTableWrap" class="table-wrap hidden">
+                <table class="orders-table">
+                    <thead>
+                    <tr>
+                        <th>Mã đơn</th>
+                        <th>Ngày</th>
+                        <th>Khách hàng</th>
+                        <th>Số kiện</th>
+                        <th>Người đóng</th>
+                        <th>Người giao</th>
+                        <th>Trạng thái</th>
+                        <th>Ảnh</th>
+                        <th>Tác vụ</th>
+                    </tr>
+                    </thead>
+                    <tbody id="ordersTableBody"></tbody>
+                </table>
             </div>
         </section>
 
-        <div id="ordersGrid" class="orders"></div>
+        <section id="dashboardTab" class="app-tab-panel hidden">
+            <section class="dashboard">
+                <div class="dashboard-head">
+                    <h2>Dashboard theo người đóng và người giao</h2>
+                    <p>Dữ liệu dashboard tự động cập nhật theo bộ lọc hiện tại và realtime.</p>
+                </div>
 
-        <div id="ordersTableWrap" class="table-wrap hidden">
-            <table class="orders-table">
-                <thead>
-                <tr>
-                    <th>Mã đơn</th>
-                    <th>Ngày</th>
-                    <th>Khách hàng</th>
-                    <th>Số kiện</th>
-                    <th>Người đóng</th>
-                    <th>Người giao</th>
-                    <th>Trạng thái</th>
-                    <th>Ảnh</th>
-                    <th>Tác vụ</th>
-                </tr>
-                </thead>
-                <tbody id="ordersTableBody"></tbody>
-            </table>
-        </div>
+                <div class="dashboard-controls">
+                    <div class="dashboard-mode-switch">
+                        <button id="dashboardMonthModeBtn" type="button" class="dashboard-mode-btn active">Theo tháng</button>
+                        <button id="dashboardDayModeBtn" type="button" class="dashboard-mode-btn">Theo ngày</button>
+                    </div>
+
+                    <div id="dashboardDayPanel" class="dashboard-mode-panel hidden">
+                        <label>
+                            Ngày:
+                            <input id="dashboardDay" type="date">
+                        </label>
+                    </div>
+
+                    <div id="dashboardMonthPanel" class="dashboard-mode-panel">
+                        <label>
+                            Tháng:
+                            <input id="dashboardMonth" type="month">
+                        </label>
+                    </div>
+
+                    <label class="dashboard-explode-toggle">
+                        <input id="dashboardExplodeToggle" type="checkbox">
+                        <span class="dashboard-explode-text">
+                            <span class="dashboard-explode-title">Tách người theo dấu +</span>
+                            <span class="dashboard-explode-desc">(Ví dụ: DUNG + VĨ sẽ tính thành 2 đơn riêng.)</span>
+                        </span>
+                    </label>
+                </div>
+
+                <div class="kpi-grid">
+                    <article class="kpi-card">
+                        <p class="kpi-label">Tổng đơn đang hiển thị</p>
+                        <p id="kpiTotalOrders" class="kpi-value">0</p>
+                    </article>
+
+                    <article class="kpi-card">
+                        <p class="kpi-label">Hoàn thành</p>
+                        <p id="kpiCompleted" class="kpi-value">0</p>
+                    </article>
+
+                    <article class="kpi-card">
+                        <p class="kpi-label">Đang xử lý</p>
+                        <p id="kpiProcessing" class="kpi-value">0</p>
+                    </article>
+
+                    <article class="kpi-card">
+                        <p class="kpi-label">Thất bại</p>
+                        <p id="kpiFailed" class="kpi-value">0</p>
+                    </article>
+                </div>
+
+                <div class="charts-grid">
+                    <article class="chart-card">
+                        <h3>Trạng thái đơn hàng</h3>
+                        <div class="chart-canvas-wrap">
+                            <canvas id="statusPieChart"></canvas>
+                            <div id="statusPieEmpty" class="chart-empty hidden">Không có dữ liệu để vẽ biểu đồ trạng thái.</div>
+                        </div>
+                    </article>
+
+                    <article class="chart-card">
+                        <h3>Top nhân sự theo số đơn</h3>
+                        <div class="chart-canvas-wrap">
+                            <canvas id="staffBarChart"></canvas>
+                            <div id="staffBarEmpty" class="chart-empty hidden">Không có dữ liệu để vẽ biểu đồ nhân sự.</div>
+                        </div>
+                    </article>
+
+                    <article class="chart-card wide">
+                        <h3 id="trendLineTitle">Xu hướng đơn theo tháng đã chọn </h3>
+                        <div class="chart-canvas-wrap">
+                            <canvas id="trendLineChart"></canvas>
+                            <div id="trendLineEmpty" class="chart-empty hidden">Chưa có dữ liệu theo tháng để vẽ xu hướng.</div>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="dashboard-grid">
+                    <article id="monthlyStatsCard" class="dash-card">
+                        <h3 id="monthlySummary">Theo tháng</h3>
+                        <div class="dash-cols">
+                            <div>
+                                <h4>Người đóng</h4>
+                                <div id="monthlyPackerStats" class="stats-table"></div>
+                            </div>
+
+                            <div>
+                                <h4>Người giao</h4>
+                                <div id="monthlyDelivererStats" class="stats-table"></div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article id="dailyStatsCard" class="dash-card hidden">
+                        <h3 id="dailySummary">Theo ngày</h3>
+                        <div class="dash-cols">
+                            <div>
+                                <h4>Người đóng</h4>
+                                <div id="dailyPackerStats" class="stats-table"></div>
+                            </div>
+
+                            <div>
+                                <h4>Người giao</h4>
+                                <div id="dailyDelivererStats" class="stats-table"></div>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </section>
+        </section>
+
+        <section id="employeesTab" class="app-tab-panel hidden">
+            <section class="admin-section">
+                <div class="admin-head">
+                    <div>
+                        <h2>Danh sách employees</h2>
+                        <p>Thêm, sửa, xóa employee trong bảng Supabase employees.</p>
+                    </div>
+                    <div class="admin-head-actions">
+                        <button id="openEmployeeModalBtn" type="button">➕ Thêm employee</button>
+                        <button id="refreshEmployeesAdminBtn" type="button" class="secondary">🔄 Tải lại</button>
+                    </div>
+                </div>
+
+                <div class="table-wrap">
+                    <table class="admin-table">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Code</th>
+                            <th>Name</th>
+                            <th>Aliases</th>
+                            <th>Active</th>
+                            <th>Cập nhật</th>
+                            <th>Tác vụ</th>
+                        </tr>
+                        </thead>
+                        <tbody id="employeesAdminTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+        </section>
+
+        <section id="apiKeysTab" class="app-tab-panel hidden">
+            <section class="admin-section">
+                <div class="admin-head">
+                    <div>
+                        <h2>Danh sách AI API Keys</h2>
+                        <p>Quản lý bảng ai_api_keys với thao tác thêm, sửa, xóa.</p>
+                    </div>
+
+                    <div class="admin-head-actions">
+                        <button id="openApiKeyModalBtn" type="button">➕ Thêm API Key</button>
+                        <button id="refreshApiKeysBtn" type="button" class="secondary">🔄 Tải lại</button>
+                    </div>
+                </div>
+
+                <div class="table-wrap">
+                    <table class="admin-table">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Provider</th>
+                            <th>Account</th>
+                            <th>API key</th>
+                            <th>Active</th>
+                            <th>Error</th>
+                            <th>Last used</th>
+                            <th>Cooldown</th>
+                            <th>Created</th>
+                            <th>Tác vụ</th>
+                        </tr>
+                        </thead>
+                        <tbody id="apiKeysTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+        </section>
     </section>
 </div>
 
@@ -1321,6 +1715,105 @@
     </div>
 </div>
 
+<div id="employeeModal" class="edit-modal">
+    <div class="edit-dialog" role="dialog" aria-modal="true" aria-labelledby="employeeModalTitle">
+        <div class="edit-header">
+            <h3 id="employeeModalTitle">Thêm / chỉnh sửa employee</h3>
+            <button id="employeeModalClose" type="button" class="close-btn" aria-label="Đóng">×</button>
+        </div>
+
+        <form id="employeeForm" class="edit-form">
+            <input id="employeeFormId" type="hidden">
+
+            <div class="admin-grid">
+                <label>
+                    Mã employee
+                    <input id="employeeCodeInput" type="text" placeholder="VD: E001">
+                </label>
+
+                <label>
+                    Tên employee
+                    <input id="employeeNameInput" type="text" placeholder="Tên nhân sự" required>
+                </label>
+
+                <label>
+                    Aliases
+                    <textarea id="employeeAliasesInput" placeholder="Nhập alias, cách nhau bằng dấu phẩy"></textarea>
+                </label>
+
+                <label class="admin-checkbox">
+                    <input id="employeeIsActiveInput" type="checkbox" checked>
+                    Employee đang hoạt động
+                </label>
+            </div>
+
+            <p id="employeeFormMessage" class="form-message"></p>
+
+            <div class="edit-actions">
+                <button id="employeeFormResetBtn" type="button" class="secondary">Hủy chỉnh sửa</button>
+                <button id="employeeSubmitBtn" type="submit">Thêm employee</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="apiKeyModal" class="edit-modal">
+    <div class="edit-dialog" role="dialog" aria-modal="true" aria-labelledby="apiKeyModalTitle">
+        <div class="edit-header">
+            <h3 id="apiKeyModalTitle">Thêm / chỉnh sửa API key</h3>
+            <button id="apiKeyModalClose" type="button" class="close-btn" aria-label="Đóng">×</button>
+        </div>
+
+        <form id="apiKeyForm" class="edit-form">
+            <input id="apiKeyFormId" type="hidden">
+
+            <div class="admin-grid">
+                <label>
+                    Provider
+                    <input id="apiKeyProviderInput" type="text" placeholder="openai, gemini..." required>
+                </label>
+
+                <label>
+                    API key
+                    <input id="apiKeyValueInput" type="text" placeholder="Nhập API key" required>
+                </label>
+
+                <label>
+                    Tài khoản
+                    <input id="apiKeyAccountInput" type="text" placeholder="Email / tên account">
+                </label>
+
+                <label>
+                    Error count
+                    <input id="apiKeyErrorCountInput" type="number" min="0" step="1" value="0">
+                </label>
+
+                <label>
+                    Last used at
+                    <input id="apiKeyLastUsedInput" type="datetime-local">
+                </label>
+
+                <label>
+                    Cooldown until
+                    <input id="apiKeyCooldownUntilInput" type="datetime-local">
+                </label>
+
+                <label class="admin-checkbox">
+                    <input id="apiKeyIsActiveInput" type="checkbox" checked>
+                    Key đang hoạt động
+                </label>
+            </div>
+
+            <p id="apiKeyFormMessage" class="form-message"></p>
+
+            <div class="edit-actions">
+                <button id="apiKeyFormResetBtn" type="button" class="secondary">Hủy chỉnh sửa</button>
+                <button id="apiKeySubmitBtn" type="submit">Thêm API key</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -1331,6 +1824,7 @@
     const SUPABASE_ANON_KEY = "sb_publishable_vBoZr89uwX6nNzm9Hr9Mnw_sXjxTfnT";
     const TABLE_NAME = "orders";
     const EMPLOYEE_TABLE = "employees";
+    const AI_API_KEYS_TABLE = "ai_api_keys";
     const BUCKET_NAME = "order-images";
     const ORDER_STATUSES = ["ai_processing", "completed", "failed"];
 
@@ -1343,6 +1837,9 @@
         orders: [],
         filteredOrders: [],
         employees: [],
+        employeesAdmin: [],
+        apiKeys: [],
+        appTab: "orders",
         view: "grid",
         realtimeChannel: null,
         realtimeTimer: null,
@@ -1350,6 +1847,8 @@
         dashboardMode: "month",
         dashboardExplode: false,
         editingOrderId: "",
+        editingEmployeeId: "",
+        editingApiKeyId: "",
         charts: {
             statusPie: null,
             staffBar: null,
@@ -1650,10 +2149,133 @@
         }
     }
 
+    function setFormMessage(elementId, message, isError) {
+        const formMessage = byId(elementId);
+        if (!formMessage) {
+            return;
+        }
+
+        formMessage.textContent = message || "";
+        formMessage.className = "form-message";
+
+        if (message) {
+            formMessage.classList.add(isError ? "error-text" : "ok-text");
+        }
+    }
+
+    function toDateTimeLocalInput(value) {
+        if (!value) {
+            return "";
+        }
+
+        const date = value instanceof Date ? value : new Date(value);
+        if (Number.isNaN(date.getTime())) {
+            return "";
+        }
+
+        return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}T${pad2(date.getHours())}:${pad2(date.getMinutes())}`;
+    }
+
+    function localDateTimeToIso(value) {
+        const textValue = String(value || "").trim();
+        if (!textValue) {
+            return null;
+        }
+
+        const date = new Date(textValue);
+        if (Number.isNaN(date.getTime())) {
+            return null;
+        }
+
+        return date.toISOString();
+    }
+
+    function parseAliasesInput(value) {
+        return String(value || "")
+            .split(/[\n,;]+/)
+            .map((alias) => alias.trim())
+            .filter(Boolean);
+    }
+
+    function aliasesToInputText(value) {
+        if (Array.isArray(value)) {
+            return value
+                .map((alias) => String(alias || "").trim())
+                .filter(Boolean)
+                .join(", ");
+        }
+
+        if (typeof value === "string") {
+            return value
+                .replaceAll("{", "")
+                .replaceAll("}", "")
+                .split(",")
+                .map((alias) => alias.trim())
+                .filter(Boolean)
+                .join(", ");
+        }
+
+        return "";
+    }
+
+    function aliasesToDisplay(value) {
+        const normalized = aliasesToInputText(value);
+        return normalized || "-";
+    }
+
+    function setAppTab(tabName) {
+        const availableTabs = ["dashboard", "orders", "employees", "api-keys"];
+        state.appTab = availableTabs.includes(tabName) ? tabName : "dashboard";
+
+        byId("appTabOrdersBtn").classList.toggle("active", state.appTab === "orders");
+        byId("appTabDashboardBtn").classList.toggle("active", state.appTab === "dashboard");
+        byId("appTabEmployeesBtn").classList.toggle("active", state.appTab === "employees");
+        byId("appTabApiKeysBtn").classList.toggle("active", state.appTab === "api-keys");
+
+        byId("ordersTab").classList.toggle("hidden", state.appTab !== "orders");
+        byId("dashboardTab").classList.toggle("hidden", state.appTab !== "dashboard");
+        byId("employeesTab").classList.toggle("hidden", state.appTab !== "employees");
+        byId("apiKeysTab").classList.toggle("hidden", state.appTab !== "api-keys");
+
+        if (state.appTab === "dashboard") {
+            renderDashboard();
+        }
+
+        if (state.appTab === "employees" && state.session && !state.employeesAdmin.length) {
+            loadEmployeesAdmin();
+        }
+
+        if (state.appTab === "api-keys" && state.session && !state.apiKeys.length) {
+            loadApiKeys();
+        }
+    }
+
     function syncBodyOverflow() {
         const imageVisible = byId("imageModal").classList.contains("show");
         const editVisible = byId("editModal").classList.contains("show");
-        document.body.style.overflow = imageVisible || editVisible ? "hidden" : "";
+        const employeeVisible = byId("employeeModal").classList.contains("show");
+        const apiKeyVisible = byId("apiKeyModal").classList.contains("show");
+        document.body.style.overflow = imageVisible || editVisible || employeeVisible || apiKeyVisible ? "hidden" : "";
+    }
+
+    function openEmployeeModal() {
+        byId("employeeModal").classList.add("show");
+        syncBodyOverflow();
+    }
+
+    function closeEmployeeModal() {
+        byId("employeeModal").classList.remove("show");
+        syncBodyOverflow();
+    }
+
+    function openApiKeyModal() {
+        byId("apiKeyModal").classList.add("show");
+        syncBodyOverflow();
+    }
+
+    function closeApiKeyModal() {
+        byId("apiKeyModal").classList.remove("show");
+        syncBodyOverflow();
     }
 
     function nullableText(value) {
@@ -3011,6 +3633,451 @@
         renderEmployeeSelectOptions();
     }
 
+    function setEmployeeFormMode(isEditing) {
+        byId("employeeSubmitBtn").textContent = isEditing ? "Lưu employee" : "Thêm employee";
+    }
+
+    function resetEmployeeForm() {
+        byId("employeeForm").reset();
+        byId("employeeFormId").value = "";
+        byId("employeeIsActiveInput").checked = true;
+        state.editingEmployeeId = "";
+        setEmployeeFormMode(false);
+        setFormMessage("employeeFormMessage", "", false);
+        closeEmployeeModal();
+    }
+
+    function populateEmployeeForm(employee) {
+        if (!employee) {
+            return;
+        }
+
+        const employeeId = employee.id;
+        state.editingEmployeeId = employeeId !== null && typeof employeeId !== "undefined" ? String(employeeId) : "";
+
+        byId("employeeFormId").value = state.editingEmployeeId;
+        byId("employeeCodeInput").value = employee.code || "";
+        byId("employeeNameInput").value = employee.name || "";
+        byId("employeeAliasesInput").value = aliasesToInputText(employee.aliases);
+        byId("employeeIsActiveInput").checked = Boolean(employee.is_active);
+
+        setEmployeeFormMode(true);
+        setFormMessage("employeeFormMessage", "Đang chỉnh sửa employee ID " + state.editingEmployeeId + ".", false);
+        openEmployeeModal();
+    }
+
+    function createTableActionButton(className, title, text) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = className;
+        button.title = title;
+        button.setAttribute("aria-label", title);
+        button.textContent = text;
+        return button;
+    }
+
+    function renderEmployeesAdminTable() {
+        const body = byId("employeesAdminTableBody");
+        body.innerHTML = "";
+
+        if (!state.employeesAdmin.length) {
+            const row = document.createElement("tr");
+            const cell = document.createElement("td");
+            cell.colSpan = 7;
+            cell.className = "table-empty";
+            cell.textContent = "Chưa có employee nào.";
+            row.appendChild(cell);
+            body.appendChild(row);
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+
+        for (const employee of state.employeesAdmin) {
+            const row = document.createElement("tr");
+
+            row.appendChild(createTableCell(String(employee.id ?? "-"), ""));
+            row.appendChild(createTableCell(employee.code || "-", ""));
+            row.appendChild(createTableCell(employee.name || "-", ""));
+            row.appendChild(createTableCell(aliasesToDisplay(employee.aliases), ""));
+            row.appendChild(createTableCell(employee.is_active ? "Có" : "Không", ""));
+            row.appendChild(createTableCell(formatDateTime(employee.updated_at || employee.created_at), ""));
+
+            const actionCell = document.createElement("td");
+            const actionWrap = document.createElement("div");
+            actionWrap.className = "table-actions";
+
+            const editButton = createTableActionButton("secondary table-action-btn", "Sửa employee", "✏️");
+            editButton.addEventListener("click", () => {
+                populateEmployeeForm(employee);
+            });
+
+            const deleteButton = createTableActionButton("danger table-action-btn", "Xóa employee", "🗑️");
+            deleteButton.addEventListener("click", async () => {
+                await deleteEmployeeRecord(employee);
+            });
+
+            actionWrap.append(editButton, deleteButton);
+            actionCell.appendChild(actionWrap);
+            row.appendChild(actionCell);
+
+            fragment.appendChild(row);
+        }
+
+        body.appendChild(fragment);
+    }
+
+    async function loadEmployeesAdmin() {
+        if (!supabaseClient || !state.session) {
+            state.employeesAdmin = [];
+            renderEmployeesAdminTable();
+            return;
+        }
+
+        const result = await supabaseClient
+            .from(EMPLOYEE_TABLE)
+            .select("*")
+            .order("id", { ascending: true });
+
+        if (result.error) {
+            state.employeesAdmin = [];
+            renderEmployeesAdminTable();
+            setFormMessage("employeeFormMessage", `Không tải được employees: ${result.error.message}`, true);
+            return;
+        }
+
+        state.employeesAdmin = Array.isArray(result.data) ? result.data : [];
+        renderEmployeesAdminTable();
+    }
+
+    async function saveEmployeeRecord(event) {
+        event.preventDefault();
+
+        if (!supabaseClient || !state.session) {
+            setFormMessage("employeeFormMessage", "Bạn cần đăng nhập trước khi cập nhật employee.", true);
+            return;
+        }
+
+        const name = nullableText(byId("employeeNameInput").value);
+        if (!name) {
+            setFormMessage("employeeFormMessage", "Tên employee là bắt buộc.", true);
+            return;
+        }
+
+        const aliases = parseAliasesInput(byId("employeeAliasesInput").value);
+        const payload = {
+            code: nullableText(byId("employeeCodeInput").value),
+            name,
+            aliases,
+            is_active: byId("employeeIsActiveInput").checked
+        };
+
+        const employeeId = byId("employeeFormId").value;
+        const saveButton = byId("employeeSubmitBtn");
+        saveButton.disabled = true;
+        setFormMessage("employeeFormMessage", "Đang lưu employee...", false);
+
+        const result = employeeId
+            ? await supabaseClient
+                .from(EMPLOYEE_TABLE)
+                .update(payload)
+                .eq("id", employeeId)
+                .select("id")
+            : await supabaseClient
+                .from(EMPLOYEE_TABLE)
+                .insert(payload)
+                .select("id");
+
+        saveButton.disabled = false;
+
+        if (result.error) {
+            setFormMessage("employeeFormMessage", `Lưu employee thất bại: ${result.error.message}`, true);
+            return;
+        }
+
+        const actionLabel = employeeId ? "Cập nhật" : "Thêm";
+
+        await loadEmployeesAdmin();
+        await loadEmployees();
+        resetEmployeeForm();
+        setFormMessage("employeeFormMessage", `${actionLabel} employee thành công.`, false);
+    }
+
+    async function deleteEmployeeRecord(employee) {
+        if (!supabaseClient || !state.session) {
+            alert("Bạn cần đăng nhập trước khi xóa employee.");
+            return;
+        }
+
+        const employeeId = employee && employee.id;
+        if (employeeId === null || typeof employeeId === "undefined") {
+            alert("Không xác định được ID employee.");
+            return;
+        }
+
+        const employeeName = employee.name ? ` (${employee.name})` : "";
+        const accepted = window.confirm(`Xác nhận xóa employee ID ${employeeId}${employeeName}?`);
+        if (!accepted) {
+            return;
+        }
+
+        const result = await supabaseClient
+            .from(EMPLOYEE_TABLE)
+            .delete({ count: "exact" })
+            .eq("id", employeeId);
+
+        if (result.error || Number(result.count || 0) === 0) {
+            alert(`Xóa employee thất bại: ${(result.error && result.error.message) || "Không tìm thấy employee."}`);
+            return;
+        }
+
+        if (state.editingEmployeeId && String(employeeId) === state.editingEmployeeId) {
+            resetEmployeeForm();
+        }
+
+        await loadEmployeesAdmin();
+        await loadEmployees();
+    }
+
+    function maskApiKey(value) {
+        const textValue = String(value || "").trim();
+        if (!textValue) {
+            return "-";
+        }
+
+        if (textValue.length <= 10) {
+            return textValue;
+        }
+
+        return `${textValue.slice(0, 4)}...${textValue.slice(-4)}`;
+    }
+
+    function setApiKeyFormMode(isEditing) {
+        byId("apiKeySubmitBtn").textContent = isEditing ? "Lưu API key" : "Thêm API key";
+    }
+
+    function resetApiKeyForm() {
+        byId("apiKeyForm").reset();
+        byId("apiKeyFormId").value = "";
+        byId("apiKeyIsActiveInput").checked = true;
+        byId("apiKeyErrorCountInput").value = "0";
+        state.editingApiKeyId = "";
+        setApiKeyFormMode(false);
+        setFormMessage("apiKeyFormMessage", "", false);
+        closeApiKeyModal();
+    }
+
+    function populateApiKeyForm(apiKey) {
+        if (!apiKey) {
+            return;
+        }
+
+        const apiKeyId = apiKey.id;
+        state.editingApiKeyId = apiKeyId !== null && typeof apiKeyId !== "undefined" ? String(apiKeyId) : "";
+
+        byId("apiKeyFormId").value = state.editingApiKeyId;
+        byId("apiKeyProviderInput").value = apiKey.provider || "";
+        byId("apiKeyValueInput").value = apiKey.api_key || "";
+        byId("apiKeyAccountInput").value = apiKey.api_account_name || "";
+        byId("apiKeyIsActiveInput").checked = Boolean(apiKey.is_active);
+        byId("apiKeyErrorCountInput").value = Number.isFinite(Number(apiKey.error_count)) ? String(Number(apiKey.error_count)) : "0";
+        byId("apiKeyLastUsedInput").value = toDateTimeLocalInput(apiKey.last_used_at);
+        byId("apiKeyCooldownUntilInput").value = toDateTimeLocalInput(apiKey.cooldown_until);
+
+        setApiKeyFormMode(true);
+        setFormMessage("apiKeyFormMessage", "Đang chỉnh sửa API key ID " + state.editingApiKeyId + ".", false);
+        openApiKeyModal();
+    }
+
+    function renderApiKeysTable() {
+        const body = byId("apiKeysTableBody");
+        body.innerHTML = "";
+
+        if (!state.apiKeys.length) {
+            const row = document.createElement("tr");
+            const cell = document.createElement("td");
+            cell.colSpan = 10;
+            cell.className = "table-empty";
+            cell.textContent = "Chưa có API key nào.";
+            row.appendChild(cell);
+            body.appendChild(row);
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+
+        for (const apiKey of state.apiKeys) {
+            const row = document.createElement("tr");
+
+            row.appendChild(createTableCell(String(apiKey.id ?? "-"), ""));
+            row.appendChild(createTableCell(apiKey.provider || "-", ""));
+            row.appendChild(createTableCell(apiKey.api_account_name || "-", ""));
+
+            const keyCell = document.createElement("td");
+            const keyText = document.createElement("span");
+            keyText.className = "admin-key";
+            keyText.textContent = maskApiKey(apiKey.api_key);
+            keyCell.appendChild(keyText);
+            row.appendChild(keyCell);
+
+            row.appendChild(createTableCell(apiKey.is_active ? "Có" : "Không", ""));
+            row.appendChild(createTableCell(String(apiKey.error_count ?? 0), ""));
+            row.appendChild(createTableCell(formatDateTime(apiKey.last_used_at), ""));
+            row.appendChild(createTableCell(formatDateTime(apiKey.cooldown_until), ""));
+            row.appendChild(createTableCell(formatDateTime(apiKey.created_at), ""));
+
+            const actionCell = document.createElement("td");
+            const actionWrap = document.createElement("div");
+            actionWrap.className = "table-actions";
+
+            const editButton = createTableActionButton("secondary table-action-btn", "Sửa API key", "✏️");
+            editButton.addEventListener("click", () => {
+                populateApiKeyForm(apiKey);
+            });
+
+            const deleteButton = createTableActionButton("danger table-action-btn", "Xóa API key", "🗑️");
+            deleteButton.addEventListener("click", async () => {
+                await deleteApiKeyRecord(apiKey);
+            });
+
+            actionWrap.append(editButton, deleteButton);
+            actionCell.appendChild(actionWrap);
+            row.appendChild(actionCell);
+
+            fragment.appendChild(row);
+        }
+
+        body.appendChild(fragment);
+    }
+
+    async function loadApiKeys() {
+        if (!supabaseClient || !state.session) {
+            state.apiKeys = [];
+            renderApiKeysTable();
+            return;
+        }
+
+        const result = await supabaseClient
+            .from(AI_API_KEYS_TABLE)
+            .select("*")
+            .order("id", { ascending: true });
+
+        if (result.error) {
+            state.apiKeys = [];
+            renderApiKeysTable();
+            setFormMessage("apiKeyFormMessage", `Không tải được ai_api_keys: ${result.error.message}`, true);
+            return;
+        }
+
+        state.apiKeys = Array.isArray(result.data) ? result.data : [];
+        renderApiKeysTable();
+    }
+
+    async function saveApiKeyRecord(event) {
+        event.preventDefault();
+
+        if (!supabaseClient || !state.session) {
+            setFormMessage("apiKeyFormMessage", "Bạn cần đăng nhập trước khi cập nhật API key.", true);
+            return;
+        }
+
+        const provider = nullableText(byId("apiKeyProviderInput").value);
+        const apiKeyValue = nullableText(byId("apiKeyValueInput").value);
+
+        if (!provider || !apiKeyValue) {
+            setFormMessage("apiKeyFormMessage", "Provider và API key là bắt buộc.", true);
+            return;
+        }
+
+        const errorCountRaw = byId("apiKeyErrorCountInput").value.trim();
+        let errorCount = null;
+
+        if (errorCountRaw !== "") {
+            const parsed = Number(errorCountRaw);
+
+            if (!Number.isInteger(parsed) || parsed < 0) {
+                setFormMessage("apiKeyFormMessage", "Error count phải là số nguyên không âm.", true);
+                return;
+            }
+
+            errorCount = parsed;
+        }
+
+        const payload = {
+            provider,
+            api_key: apiKeyValue,
+            api_account_name: nullableText(byId("apiKeyAccountInput").value),
+            is_active: byId("apiKeyIsActiveInput").checked,
+            error_count: errorCount,
+            last_used_at: localDateTimeToIso(byId("apiKeyLastUsedInput").value),
+            cooldown_until: localDateTimeToIso(byId("apiKeyCooldownUntilInput").value)
+        };
+
+        const apiKeyId = byId("apiKeyFormId").value;
+        const saveButton = byId("apiKeySubmitBtn");
+        saveButton.disabled = true;
+        setFormMessage("apiKeyFormMessage", "Đang lưu API key...", false);
+
+        const result = apiKeyId
+            ? await supabaseClient
+                .from(AI_API_KEYS_TABLE)
+                .update(payload)
+                .eq("id", apiKeyId)
+                .select("id")
+            : await supabaseClient
+                .from(AI_API_KEYS_TABLE)
+                .insert(payload)
+                .select("id");
+
+        saveButton.disabled = false;
+
+        if (result.error) {
+            setFormMessage("apiKeyFormMessage", `Lưu API key thất bại: ${result.error.message}`, true);
+            return;
+        }
+
+        const actionLabel = apiKeyId ? "Cập nhật" : "Thêm";
+
+        await loadApiKeys();
+        resetApiKeyForm();
+        setFormMessage("apiKeyFormMessage", `${actionLabel} API key thành công.`, false);
+    }
+
+    async function deleteApiKeyRecord(apiKey) {
+        if (!supabaseClient || !state.session) {
+            alert("Bạn cần đăng nhập trước khi xóa API key.");
+            return;
+        }
+
+        const apiKeyId = apiKey && apiKey.id;
+        if (apiKeyId === null || typeof apiKeyId === "undefined") {
+            alert("Không xác định được ID API key.");
+            return;
+        }
+
+        const providerText = apiKey.provider ? ` (${apiKey.provider})` : "";
+        const accepted = window.confirm(`Xác nhận xóa API key ID ${apiKeyId}${providerText}?`);
+        if (!accepted) {
+            return;
+        }
+
+        const result = await supabaseClient
+            .from(AI_API_KEYS_TABLE)
+            .delete({ count: "exact" })
+            .eq("id", apiKeyId);
+
+        if (result.error || Number(result.count || 0) === 0) {
+            alert(`Xóa API key thất bại: ${(result.error && result.error.message) || "Không tìm thấy API key."}`);
+            return;
+        }
+
+        if (state.editingApiKeyId && String(apiKeyId) === state.editingApiKeyId) {
+            resetApiKeyForm();
+        }
+
+        await loadApiKeys();
+    }
+
     function matchesFilters(order, filters) {
         const statusValue = normalizeStatusValue(order.Status);
         const orderDate = normalizeDateKey(order.OrderDate || order.CreatedAt);
@@ -3248,10 +4315,16 @@
             await teardownRealtime();
             destroyAllCharts();
             closeEditModal();
+            closeEmployeeModal();
+            closeApiKeyModal();
             closeImageModal();
             state.orders = [];
             state.filteredOrders = [];
             state.employees = [];
+            state.employeesAdmin = [];
+            state.apiKeys = [];
+            state.editingEmployeeId = "";
+            state.editingApiKeyId = "";
             byId("ordersGrid").innerHTML = "";
             byId("ordersTableBody").innerHTML = "";
             byId("kpiTotalOrders").textContent = "0";
@@ -3260,12 +4333,19 @@
             byId("kpiFailed").textContent = "0";
             buildStatusFilterOptions();
             renderEmployeeSelectOptions();
+            renderEmployeesAdminTable();
+            renderApiKeysTable();
+            resetEmployeeForm();
+            resetApiKeyForm();
+            setAppTab("orders");
             setLoginMessage("", false);
             return;
         }
 
         setLoginMessage("", false);
         await loadEmployees();
+        await loadEmployeesAdmin();
+        await loadApiKeys();
         await loadOrders(false);
         await setupRealtime();
     }
@@ -3318,12 +4398,37 @@
     function bindEvents() {
         byId("loginForm").addEventListener("submit", loginWithEmailPassword);
         byId("editOrderForm").addEventListener("submit", saveOrderEdit);
+        byId("employeeForm").addEventListener("submit", saveEmployeeRecord);
+        byId("apiKeyForm").addEventListener("submit", saveApiKeyRecord);
         byId("logoutBtn").addEventListener("click", logout);
-        byId("refreshBtn").addEventListener("click", () => loadOrders(false));
+        byId("refreshBtn").addEventListener("click", async () => {
+            await loadEmployees();
+            await loadEmployeesAdmin();
+            await loadApiKeys();
+            await loadOrders(false);
+        });
         byId("exportBtn").addEventListener("click", exportExcel);
         byId("clearFiltersBtn").addEventListener("click", clearFilters);
         byId("gridViewBtn").addEventListener("click", () => setView("grid"));
         byId("tableViewBtn").addEventListener("click", () => setView("table"));
+        byId("appTabOrdersBtn").addEventListener("click", () => setAppTab("orders"));
+        byId("appTabDashboardBtn").addEventListener("click", () => setAppTab("dashboard"));
+        byId("appTabEmployeesBtn").addEventListener("click", () => setAppTab("employees"));
+        byId("appTabApiKeysBtn").addEventListener("click", () => setAppTab("api-keys"));
+        byId("openEmployeeModalBtn").addEventListener("click", () => {
+            resetEmployeeForm();
+            openEmployeeModal();
+        });
+        byId("employeeFormResetBtn").addEventListener("click", resetEmployeeForm);
+        byId("employeeModalClose").addEventListener("click", resetEmployeeForm);
+        byId("refreshEmployeesAdminBtn").addEventListener("click", () => loadEmployeesAdmin());
+        byId("openApiKeyModalBtn").addEventListener("click", () => {
+            resetApiKeyForm();
+            openApiKeyModal();
+        });
+        byId("apiKeyFormResetBtn").addEventListener("click", resetApiKeyForm);
+        byId("apiKeyModalClose").addEventListener("click", resetApiKeyForm);
+        byId("refreshApiKeysBtn").addEventListener("click", () => loadApiKeys());
         byId("editCancelBtn").addEventListener("click", closeEditModal);
         byId("editModalClose").addEventListener("click", closeEditModal);
         byId("editDeleteBtn").addEventListener("click", async () => {
@@ -3362,6 +4467,18 @@
             }
         });
 
+        byId("employeeModal").addEventListener("click", (event) => {
+            if (event.target.id === "employeeModal") {
+                resetEmployeeForm();
+            }
+        });
+
+        byId("apiKeyModal").addEventListener("click", (event) => {
+            if (event.target.id === "apiKeyModal") {
+                resetApiKeyForm();
+            }
+        });
+
         byId("imageModal").addEventListener("click", (event) => {
             if (event.target.id === "imageModal") {
                 closeImageModal();
@@ -3380,6 +4497,16 @@
                     return;
                 }
 
+                if (byId("employeeModal").classList.contains("show")) {
+                    resetEmployeeForm();
+                    return;
+                }
+
+                if (byId("apiKeyModal").classList.contains("show")) {
+                    resetApiKeyForm();
+                    return;
+                }
+
                 if (byId("imageModal").classList.contains("show")) {
                     closeImageModal();
                 }
@@ -3390,7 +4517,12 @@
     async function init() {
         bindEvents();
         renderEmployeeSelectOptions();
+        renderEmployeesAdminTable();
+        renderApiKeysTable();
+        resetEmployeeForm();
+        resetApiKeyForm();
         buildStatusFilterOptions();
+        setAppTab("dashboard");
 
         const today = new Date();
         byId("dashboardDay").value = toIsoDate(today);
