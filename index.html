@@ -674,9 +674,16 @@
 
         .chart-card h3 {
             text-align: center;
-            margin: 0 0 10px;
+            margin: 0 0 2px;
             font-size: 15px;
             color: var(--brand);
+        }
+
+        .chart-card .chart-count {
+            text-align: center;
+            margin: 0 0 10px;
+            font-size: 13px;
+            color: var(--muted);
         }
 
         .chart-canvas-wrap {
@@ -1679,7 +1686,8 @@
 
                 <div class="charts-grid">
                     <article class="chart-card">
-                        <h3>Trạng thái đơn hàng</h3>
+                        <h3>TRẠNG THÁI ĐƠN HÀNG</h3>
+                        <div class="chart-count" id="statusPieOrdersCount"></div>
                         <div class="chart-canvas-wrap">
                             <canvas id="statusPieChart"></canvas>
                             <div id="statusPieEmpty" class="chart-empty hidden">Không có dữ liệu để vẽ biểu đồ trạng thái.</div>
@@ -1687,7 +1695,8 @@
                     </article>
 
                     <article class="chart-card">
-                        <h3>Top nhân sự theo số đơn</h3>
+                        <h3>TOP NHÂN SỰ THEO SỐ ĐƠN</h3>
+                        <div class="chart-count" id="topStaffByOrdersCount"></div>
                         <div class="chart-canvas-wrap">
                             <canvas id="staffBarChart"></canvas>
                             <div id="staffBarEmpty" class="chart-empty hidden">Không có dữ liệu để vẽ biểu đồ nhân sự.</div>
@@ -1695,7 +1704,8 @@
                     </article>
 
                     <article class="chart-card">
-                        <h3>Top nhân sự theo số kiện</h3>
+                        <h3>TOP NHÂN SỰ THEO SỐ KIỆN</h3>
+                        <div class="chart-count" id="staffQuantityByOrdersCount"></div>
                         <div class="chart-canvas-wrap">
                             <canvas id="staffQuantityBarChart"></canvas>
                             <div id="staffQuantityBarEmpty" class="chart-empty hidden">Không có dữ liệu để vẽ biểu đồ số kiện theo nhân sự.</div>
@@ -1703,7 +1713,8 @@
                     </article>
 
                     <article class="chart-card wide">
-                        <h3 id="trendLineTitle">Xu hướng đơn theo tháng đã chọn </h3>
+                        <h3 id="trendLineTitle">XU HƯỚNG THEO THÁNG ĐÃ CHỌN</h3>
+                        <div class="chart-count" id="trendLineOrdersCount"></div>
                         <div class="chart-canvas-wrap">
                             <canvas id="trendLineChart"></canvas>
                             <div id="trendLineEmpty" class="chart-empty hidden">Chưa có dữ liệu theo tháng để vẽ xu hướng.</div>
@@ -2962,7 +2973,7 @@
             const row = document.createElement("tr");
 
             row.appendChild(createTableCell(order.OrderCode || "Chưa có mã", "strong"));
-            row.appendChild(createTableCell(formatDate(order.OrderDate || order.CreatedAt), ""));
+            row.appendChild(createTableCell(formatDate(order.OrderDate), ""));
             row.appendChild(createTableCell(order.CustomerName || "-", ""));
             row.appendChild(createTableCell(String(order.QuantitySK ?? "-"), ""));
             row.appendChild(createTableCell(order.PackerND || "-", ""));
@@ -3286,6 +3297,8 @@
                 }
             }
         });
+
+        byId("statusPieOrdersCount").textContent = `(Tổng số ${orders.length} đơn hàng)`;        
     }
 
     function topPeople(orders, fieldName, limit, options) {
@@ -3427,6 +3440,9 @@
                 }
             }
         });
+
+        // Thay đổi topStaffByOrdersCount để hiển thị tổng số đơn
+        byId("topStaffByOrdersCount").textContent = `(Dựa theo ${orders.length} đơn hàng thành công)`;
     }
 
     function renderStaffQuantityBarChart(orders, explodePeople) {
@@ -3502,6 +3518,9 @@
                 }
             }
         });
+
+        // Thay đổi staffQuantityBarTitle để hiển thị tổng số kiện
+        byId("staffQuantityByOrdersCount").textContent = `(Dựa theo ${orders.length} đơn hàng thành công)`;
     }
 
     function parseIsoDateStrict(value) {
@@ -3542,10 +3561,11 @@
             return;
         }
 
+        byId("trendLineOrdersCount").textContent = `(Dựa theo ${orders.length} đơn hàng thành công)`;
         const titleElement = byId("trendLineTitle");
 
         if (dashboardMode === "day") {
-            titleElement.textContent = "Xu hướng 7 ngày quanh ngày đã chọn";
+            titleElement.textContent = `XU HƯỚNG 7 NGÀY QUANH NGÀY ĐÃ CHỌN`;
 
             const selectedDay = normalizeInputDateKey(byId("dashboardDay").value);
             const centerDate = parseIsoDateStrict(selectedDay);
@@ -3611,7 +3631,7 @@
         }
 
         if (dashboardMode === "year") {
-            titleElement.textContent = "Xu hướng đơn hàng theo tháng trong năm";
+            titleElement.textContent = `XU HƯỚNG ĐƠN HÀNG THEO THÁNG TRONG NĂM`;
 
             const yearValue = normalizeYearKey(byId("dashboardYear").value);
             if (!yearValue || !/^\d{4}$/.test(yearValue)) {
@@ -3691,7 +3711,7 @@
             return;
         }
 
-        titleElement.textContent = "Xu hướng đơn hàng theo tháng";
+        titleElement.textContent = `XU HƯỚNG ĐƠN HÀNG THEO THÁNG`;
 
         const monthValue = normalizeMonthKey(byId("dashboardMonth").value);
         if (!monthValue || !/^\d{4}-\d{2}$/.test(monthValue)) {
@@ -3795,25 +3815,17 @@
         const selectedMonth = normalizeMonthKey(byId("dashboardMonth").value);
         const selectedYear = normalizeYearKey(byId("dashboardYear").value);
 
-        const dailyOrders = selectedDay
+        let dailyOrders = selectedDay
             ? source.filter((order) => normalizeDateKey(order.OrderDate || order.CreatedAt) === selectedDay)
             : [];
 
-        const monthlyOrders = selectedMonth
+        let monthlyOrders = selectedMonth
             ? source.filter((order) => normalizeDateKey(order.OrderDate || order.CreatedAt).startsWith(selectedMonth))
             : [];
 
-        const yearlyOrders = selectedYear
+        let yearlyOrders = selectedYear
             ? source.filter((order) => normalizeDateKey(order.OrderDate || order.CreatedAt).startsWith(`${selectedYear}-`))
             : [];
-
-        const daySummaryLabel = selectedDay ? formatDate(selectedDay) : "chưa chọn";
-        const monthSummaryLabel = selectedMonth ? formatMonth(selectedMonth) : "chưa chọn";
-        const yearSummaryLabel = selectedYear || "chưa chọn";
-
-        byId("dailySummary").textContent = `Theo ngày ${daySummaryLabel}: ${dailyOrders.length} đơn`;
-        byId("monthlySummary").textContent = `Theo tháng ${monthSummaryLabel}: ${monthlyOrders.length} đơn`;
-        byId("yearlySummary").textContent = `Theo năm ${yearSummaryLabel}: ${yearlyOrders.length} đơn`;
 
         let dashboardOrders = monthlyOrders;
         if (state.dashboardMode === "day") {
@@ -3821,15 +3833,29 @@
         } else if (state.dashboardMode === "year") {
             dashboardOrders = yearlyOrders;
         }
-
-        const personAggregateOptions = { explode: state.dashboardExplode };
-
         renderKpis(dashboardOrders);
         renderStatusPieChart(dashboardOrders);
+
+        // Các dashboard và bảng thống kê chỉ lấy orders có tình trạng là completed
+        dashboardOrders = dashboardOrders.filter((order) => normalizeStatusValue(order.Status) === "completed");
+        dailyOrders = dailyOrders.filter((order) => normalizeStatusValue(order.Status) === "completed");
+        monthlyOrders = monthlyOrders.filter((order) => normalizeStatusValue(order.Status) === "completed");
+        yearlyOrders = yearlyOrders.filter((order) => normalizeStatusValue(order.Status) === "completed");
+
+        const daySummaryLabel = selectedDay ? formatDate(selectedDay) : "chưa chọn";
+        const monthSummaryLabel = selectedMonth ? formatMonth(selectedMonth) : "chưa chọn";
+        const yearSummaryLabel = selectedYear || "chưa chọn";
+
+        byId("dailySummary").textContent = `Theo ngày ${daySummaryLabel}: ${dailyOrders.length} đơn thành công`;
+        byId("monthlySummary").textContent = `Theo tháng ${monthSummaryLabel}: ${monthlyOrders.length} đơn thành công`;
+        byId("yearlySummary").textContent = `Theo năm ${yearSummaryLabel}: ${yearlyOrders.length} đơn thành công`;
+
+        // Render các biểu đồ và bảng thống kê
         renderStaffBarChart(dashboardOrders, state.dashboardExplode);
         renderStaffQuantityBarChart(dashboardOrders, state.dashboardExplode);
-        renderTrendLineChart(source, state.dashboardMode);
+        renderTrendLineChart(dashboardOrders, state.dashboardMode);
 
+        const personAggregateOptions = { explode: state.dashboardExplode };
         renderStatsTable(byId("dailyPackerStats"), aggregateByPerson(dailyOrders, "PackerND", personAggregateOptions));
         renderStatsTable(byId("dailyDelivererStats"), aggregateByPerson(dailyOrders, "DelivererNG", personAggregateOptions));
         renderStatsTable(byId("monthlyPackerStats"), aggregateByPerson(monthlyOrders, "PackerND", personAggregateOptions));
@@ -5073,7 +5099,7 @@
             renderApiKeysTable();
             resetEmployeeForm();
             resetApiKeyForm();
-            setAppTab("orders");
+            setAppTab("dashboard");
             setLoginMessage("", false);
             return;
         }
