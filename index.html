@@ -105,12 +105,13 @@
             .header-actions {
                 display: none; /* Mặc định ẩn trên mobile */
                 position: absolute;
-                top: calc(100% + 12px);
+                top: calc(100% + 2px);
+                padding: 10px;
                 right: 0;
                 width: 220px;
                 background: var(--panel);
                 border: 1px solid var(--border);
-                border-radius: 12px;
+                border-radius: 6px;
                 z-index: 1001;
             }
 
@@ -146,12 +147,10 @@
         .user-badge {
             display: inline-flex;
             align-items: center;
-            padding: 7px 14px;
-            background: rgba(0, 240, 255, 0.12);
-            border: 1px solid rgba(0, 240, 255, 0.3);
-            border-radius: 999px;
+            padding: 10px 0;
             font-size: 13px;
-            color: #00f0ff;
+            font-weight: 600;
+            color: #0db0ba;
         }
 
         button {
@@ -512,7 +511,7 @@
             background: var(--panel-secondary);
             padding: 8px 12px;
             color: var(--text);
-            min-height: 40px;
+            min-height: 38px;
             cursor: pointer;
             user-select: none;
             transition: all 0.2s ease;
@@ -558,7 +557,8 @@
         }
 
         .dashboard-controls input[type="date"],
-        .dashboard-controls input[type="month"] {
+        .dashboard-controls input[type="month"],
+        .dashboard-controls .date-control {
             border: 1px solid var(--border);
             border-radius: 8px;
             height: 38px;
@@ -566,6 +566,53 @@
             outline: none;
             background: var(--panel);
             color: var(--text);
+            font-size: 14px;
+        }
+
+        .filters .date-control,
+        .edit-grid .date-control {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            outline: none;
+            background: var(--panel);
+            color: var(--text);
+        }
+
+        .flatpickr-calendar {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.15);
+            background: var(--panel);
+        }
+
+        .flatpickr-months,
+        .flatpickr-weekdays {
+            background: var(--panel-secondary);
+        }
+
+        .flatpickr-weekday {
+            color: var(--muted);
+            font-weight: 700;
+        }
+
+        .flatpickr-day.selected,
+        .flatpickr-day.startRange,
+        .flatpickr-day.endRange,
+        .flatpickr-day.selected:hover,
+        .flatpickr-day.startRange:hover,
+        .flatpickr-day.endRange:hover {
+            background: var(--brand);
+            border-color: var(--brand);
+            color: #ffffff;
+        }
+
+        .flatpickr-day.today {
+            border-color: var(--brand);
+            color: var(--brand);
+        }
+
+        .flatpickr-day.today:hover {
+            background: rgba(0, 136, 204, 0.12);
         }
 
         .kpi-grid {
@@ -1010,7 +1057,7 @@
         }
 
         .admin-checkbox {
-            display: inline-flex;
+            display: inline-flex !important;
             align-items: center;
             gap: 8px;
             font-size: 14px;
@@ -1300,6 +1347,14 @@
             cursor: not-allowed;
         }
 
+        .edit-grid input.date-control[readonly],
+        .filters input.date-control[readonly],
+        .dashboard-controls input.date-control[readonly] {
+            background: var(--panel);
+            color: var(--text);
+            cursor: pointer;
+        }
+
         .edit-grid input:focus,
         .edit-grid select:focus,
         .employee-card input:focus,
@@ -1446,6 +1501,8 @@
     </style>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
 </head>
 
 <body>
@@ -1516,8 +1573,8 @@
                         <option value="">Tất cả trạng thái</option>
                     </select>
 
-                    <input id="dateFrom" type="date" title="Từ ngày">
-                    <input id="dateTo" type="date" title="Đến ngày">
+                    <input id="dateFrom" type="text" title="Từ ngày" placeholder="dd/MM/yyyy" autocomplete="off">
+                    <input id="dateTo" type="text" title="Đến ngày" placeholder="dd/MM/yyyy" autocomplete="off">
 
                     <button id="clearFiltersBtn" type="button" class="secondary">Xóa lọc</button>
                 </div>
@@ -1561,14 +1618,14 @@
                     <div id="dashboardDayPanel" class="dashboard-mode-panel hidden">
                         <label>
                             Ngày:
-                            <input id="dashboardDay" type="date">
+                            <input id="dashboardDay" type="text" placeholder="dd/MM/yyyy" autocomplete="off">
                         </label>
                     </div>
 
                     <div id="dashboardMonthPanel" class="dashboard-mode-panel">
                         <label>
                             Tháng:
-                            <input id="dashboardMonth" type="month">
+                            <input id="dashboardMonth" type="text" placeholder="MM/yyyy" autocomplete="off">
                         </label>
                     </div>
 
@@ -1767,7 +1824,7 @@
 
                 <label>
                     Ngày đơn
-                    <input id="editOrderDate" type="date">
+                    <input id="editOrderDate" type="text" placeholder="dd/MM/yyyy" autocomplete="off">
                 </label>
 
                 <label>
@@ -1952,6 +2009,8 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
 
 <script>
     const SUPABASE_URL = "https://jaolqnqxmpllpmgewlfg.supabase.co";
@@ -2202,6 +2261,142 @@
 
         const [year, month] = value.split("-");
         return `${month}/${year}`;
+    }
+
+    function normalizeInputDateKey(value) {
+        const textValue = String(value || "").trim();
+        if (!textValue) {
+            return "";
+        }
+
+        const dmyDate = textValue.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (dmyDate) {
+            const day = Number(dmyDate[1]);
+            const month = Number(dmyDate[2]);
+            const year = Number(dmyDate[3]);
+
+            if (isValidDateParts(year, month, day)) {
+                return `${year}-${pad2(month)}-${pad2(day)}`;
+            }
+
+            return "";
+        }
+
+        return normalizeDateKey(textValue);
+    }
+
+    function normalizeMonthKey(value) {
+        const textValue = String(value || "").trim();
+        if (!textValue) {
+            return "";
+        }
+
+        if (/^\d{4}-\d{2}$/.test(textValue)) {
+            return textValue;
+        }
+
+        const monthYear = textValue.match(/^(\d{1,2})\/(\d{4})$/);
+        if (monthYear) {
+            const month = Number(monthYear[1]);
+            const year = Number(monthYear[2]);
+            if (month >= 1 && month <= 12) {
+                return `${year}-${pad2(month)}`;
+            }
+        }
+
+        const dayMonthYear = textValue.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (dayMonthYear) {
+            const month = Number(dayMonthYear[2]);
+            const year = Number(dayMonthYear[3]);
+            if (month >= 1 && month <= 12) {
+                return `${year}-${pad2(month)}`;
+            }
+        }
+
+        const isoDate = normalizeInputDateKey(textValue);
+        if (!isoDate) {
+            return "";
+        }
+
+        return isoDate.slice(0, 7);
+    }
+
+    function setDateControlValue(inputId, value) {
+        const input = byId(inputId);
+        if (!input) {
+            return;
+        }
+
+        const nextValue = value ? String(value) : "";
+
+        if (input._flatpickr) {
+            if (!nextValue) {
+                input._flatpickr.clear();
+            } else {
+                input._flatpickr.setDate(nextValue, false);
+            }
+            return;
+        }
+
+        input.value = nextValue;
+    }
+
+    function initDateControls() {
+        if (typeof flatpickr === "undefined") {
+            return;
+        }
+
+        const dateOptions = {
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "d/m/Y",
+            altInputClass: "date-control",
+            allowInput: false,
+            disableMobile: true
+        };
+
+        for (const inputId of ["dateFrom", "dateTo", "dashboardDay", "editOrderDate"]) {
+            const input = byId(inputId);
+            if (!input) {
+                continue;
+            }
+
+            if (input._flatpickr) {
+                input._flatpickr.destroy();
+            }
+
+            flatpickr(input, dateOptions);
+        }
+
+        const monthInput = byId("dashboardMonth");
+        if (!monthInput) {
+            return;
+        }
+
+        if (monthInput._flatpickr) {
+            monthInput._flatpickr.destroy();
+        }
+
+        const monthOptions = {
+            dateFormat: "Y-m",
+            altInput: true,
+            altFormat: "m/Y",
+            altInputClass: "date-control",
+            allowInput: false,
+            disableMobile: true
+        };
+
+        if (typeof monthSelectPlugin !== "undefined") {
+            monthOptions.plugins = [
+                new monthSelectPlugin({
+                    shorthand: false,
+                    dateFormat: "Y-m",
+                    altFormat: "m/Y"
+                })
+            ];
+        }
+
+        flatpickr(monthInput, monthOptions);
     }
 
     function normalizeStatusValue(value) {
@@ -3095,9 +3290,9 @@
         const titleElement = byId("trendLineTitle");
 
         if (dashboardMode === "day") {
-            titleElement.textContent = "Xu hướng 7 ngày quanh ngày đã chọn (Line)";
+            titleElement.textContent = "Xu hướng 7 ngày quanh ngày đã chọn";
 
-            const selectedDay = byId("dashboardDay").value;
+            const selectedDay = normalizeInputDateKey(byId("dashboardDay").value);
             const centerDate = parseIsoDateStrict(selectedDay);
 
             if (!centerDate) {
@@ -3162,7 +3357,7 @@
 
         titleElement.textContent = "Xu hướng đơn hàng theo tháng";
 
-        const monthValue = byId("dashboardMonth").value;
+        const monthValue = normalizeMonthKey(byId("dashboardMonth").value);
         if (!monthValue || !/^\d{4}-\d{2}$/.test(monthValue)) {
             setChartEmptyState("trendLineEmpty", "Vui lòng chọn tháng để xem xu hướng.");
             return;
@@ -3256,8 +3451,8 @@
 
     function renderDashboard() {
         const source = state.filteredOrders;
-        const selectedDay = byId("dashboardDay").value;
-        const selectedMonth = byId("dashboardMonth").value;
+        const selectedDay = normalizeInputDateKey(byId("dashboardDay").value);
+        const selectedMonth = normalizeMonthKey(byId("dashboardMonth").value);
 
         const dailyOrders = selectedDay
             ? source.filter((order) => normalizeDateKey(order.OrderDate || order.CreatedAt) === selectedDay)
@@ -3578,7 +3773,7 @@
 
         byId("editOrderId").value = state.editingOrderId;
         byId("editOrderCode").value = order.OrderCode || "";
-        byId("editOrderDate").value = normalizeDateKey(order.OrderDate || order.CreatedAt);
+        setDateControlValue("editOrderDate", normalizeDateKey(order.OrderDate || order.CreatedAt));
         byId("editCustomerName").value = order.CustomerName || "";
         byId("editQuantitySK").value = order.QuantitySK ?? "";
         byId("editStatus").value = normalizeStatusValue(order.Status) || "";
@@ -3602,6 +3797,7 @@
     function closeEditModal() {
         byId("editModal").classList.remove("show");
         byId("editOrderForm").reset();
+        setDateControlValue("editOrderDate", "");
 
         for (const role of ["packer", "deliverer"]) {
             const { select } = getEmployeeEditorFields(role);
@@ -4309,8 +4505,8 @@
     }
 
     function applyFiltersAndRender() {
-        let from = byId("dateFrom").value;
-        let to = byId("dateTo").value;
+        let from = normalizeInputDateKey(byId("dateFrom").value);
+        let to = normalizeInputDateKey(byId("dateTo").value);
 
         if (from && to && from > to) {
             const temp = from;
@@ -4335,8 +4531,8 @@
     function clearFilters() {
         byId("searchInput").value = "";
         byId("statusFilter").value = "";
-        byId("dateFrom").value = "";
-        byId("dateTo").value = "";
+        setDateControlValue("dateFrom", "");
+        setDateControlValue("dateTo", "");
         applyFiltersAndRender();
     }
 
@@ -4722,6 +4918,7 @@
 
     async function init() {
         bindEvents();
+        initDateControls();
         renderEmployeeSelectOptions();
         renderEmployeesAdminTable();
         renderApiKeysTable();
@@ -4731,8 +4928,8 @@
         setAppTab("dashboard");
 
         const today = new Date();
-        byId("dashboardDay").value = toIsoDate(today);
-        byId("dashboardMonth").value = `${today.getFullYear()}-${pad2(today.getMonth() + 1)}`;
+        setDateControlValue("dashboardDay", toIsoDate(today));
+        setDateControlValue("dashboardMonth", `${today.getFullYear()}-${pad2(today.getMonth() + 1)}`);
         byId("dashboardExplodeToggle").checked = false;
         state.dashboardExplode = false;
         setDashboardMode("month");
