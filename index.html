@@ -4883,6 +4883,7 @@
         state.filteredOrders = state.orders.filter((order) => matchesFilters(order, filters));
 
         renderByCurrentView();
+        renderDashboard();
         updateStatusLine();
     }
 
