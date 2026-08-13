@@ -1606,13 +1606,13 @@
             <section class="dashboard">
                 <div class="dashboard-head">
                     <h2>Dashboard tổng quan</h2>
-                    <p>Dữ liệu dashboard tự động cập nhật theo bộ lọc hiện tại và realtime.</p>
                 </div>
 
                 <div class="dashboard-controls">
                     <div class="dashboard-mode-switch">
                         <button id="dashboardMonthModeBtn" type="button" class="dashboard-mode-btn active">Theo tháng</button>
                         <button id="dashboardDayModeBtn" type="button" class="dashboard-mode-btn">Theo ngày</button>
+                        <button id="dashboardYearModeBtn" type="button" class="dashboard-mode-btn">Theo năm</button>
                     </div>
 
                     <div id="dashboardDayPanel" class="dashboard-mode-panel hidden">
@@ -1626,6 +1626,13 @@
                         <label>
                             Tháng:
                             <input id="dashboardMonth" type="text" placeholder="MM/yyyy" autocomplete="off">
+                        </label>
+                    </div>
+
+                    <div id="dashboardYearPanel" class="dashboard-mode-panel hidden">
+                        <label>
+                            Năm:
+                            <input id="dashboardYear" type="text" placeholder="yyyy" autocomplete="off">
                         </label>
                     </div>
 
@@ -1687,6 +1694,14 @@
                         </div>
                     </article>
 
+                    <article class="chart-card">
+                        <h3>Top nhân sự theo số kiện</h3>
+                        <div class="chart-canvas-wrap">
+                            <canvas id="staffQuantityBarChart"></canvas>
+                            <div id="staffQuantityBarEmpty" class="chart-empty hidden">Không có dữ liệu để vẽ biểu đồ số kiện theo nhân sự.</div>
+                        </div>
+                    </article>
+
                     <article class="chart-card wide">
                         <h3 id="trendLineTitle">Xu hướng đơn theo tháng đã chọn </h3>
                         <div class="chart-canvas-wrap">
@@ -1723,6 +1738,21 @@
                             <div>
                                 <h4>Người giao</h4>
                                 <div id="dailyDelivererStats" class="stats-table"></div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article id="yearlyStatsCard" class="dash-card hidden">
+                        <h3 id="yearlySummary">Theo năm</h3>
+                        <div class="dash-cols">
+                            <div>
+                                <h4>Người đóng</h4>
+                                <div id="yearlyPackerStats" class="stats-table"></div>
+                            </div>
+
+                            <div>
+                                <h4>Người giao</h4>
+                                <div id="yearlyDelivererStats" class="stats-table"></div>
                             </div>
                         </div>
                     </article>
@@ -2027,6 +2057,33 @@
         duplicated: "Trùng đơn hàng",
         warning: "Thiếu thông tin"
     };
+    const STATUS_ALIASES = {
+        "ai processing": "ai_processing",
+        "processing": "ai_processing",
+        "in progress": "ai_processing",
+        "inprogress": "ai_processing",
+        "pending": "ai_processing",
+        "dang xu ly": "ai_processing",
+        "ai dang doc": "ai_processing",
+        "completed": "completed",
+        "complete": "completed",
+        "success": "completed",
+        "done": "completed",
+        "thanh cong": "completed",
+        "failed": "failed",
+        "fail": "failed",
+        "error": "failed",
+        "that bai": "failed",
+        "duplicated": "duplicated",
+        "duplicate": "duplicated",
+        "trung don": "duplicated",
+        "trung don hang": "duplicated",
+        "warning": "warning",
+        "warn": "warning",
+        "thieu thong tin": "warning",
+        "missing info": "warning",
+        "missing information": "warning"
+    };
 
     const supabaseClient = window.supabase
         ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
@@ -2052,6 +2109,7 @@
         charts: {
             statusPie: null,
             staffBar: null,
+            staffQuantityBar: null,
             trendLine: null
         }
     };
@@ -2321,6 +2379,34 @@
         return isoDate.slice(0, 7);
     }
 
+    function normalizeYearKey(value) {
+        const textValue = String(value || "").trim();
+        if (!textValue) {
+            return "";
+        }
+
+        if (/^\d{4}$/.test(textValue)) {
+            return textValue;
+        }
+
+        const monthYear = textValue.match(/^\d{1,2}\/(\d{4})$/);
+        if (monthYear) {
+            return monthYear[1];
+        }
+
+        const ymdLike = textValue.match(/^(\d{4})[-/]\d{1,2}(?:[-/]\d{1,2})?$/);
+        if (ymdLike) {
+            return ymdLike[1];
+        }
+
+        const isoDate = normalizeInputDateKey(textValue);
+        if (!isoDate) {
+            return "";
+        }
+
+        return isoDate.slice(0, 4);
+    }
+
     function setDateControlValue(inputId, value) {
         const input = byId(inputId);
         if (!input) {
@@ -2397,6 +2483,24 @@
         }
 
         flatpickr(monthInput, monthOptions);
+
+        const yearInput = byId("dashboardYear");
+        if (!yearInput) {
+            return;
+        }
+
+        if (yearInput._flatpickr) {
+            yearInput._flatpickr.destroy();
+        }
+
+        flatpickr(yearInput, {
+            dateFormat: "Y",
+            altInput: true,
+            altFormat: "Y",
+            altInputClass: "date-control",
+            allowInput: false,
+            disableMobile: true
+        });
     }
 
     function normalizeStatusValue(value) {
@@ -2406,11 +2510,19 @@
             return "";
         }
 
-        if (normalized === "processing") {
-            return "ai_processing";
+        if (ORDER_STATUSES.includes(normalized)) {
+            return normalized;
         }
 
-        return ORDER_STATUSES.includes(normalized) ? normalized : "";
+        const looseText = String(normalized)
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/đ/g, "d")
+            .replace(/Đ/g, "d")
+            .replace(/[^a-z0-9]+/g, " ")
+            .trim();
+
+        return STATUS_ALIASES[looseText] || "";
     }
 
     function statusDisplayName(value) {
@@ -3056,6 +3168,7 @@
     function destroyAllCharts() {
         destroyChart("statusPie");
         destroyChart("staffBar");
+        destroyChart("staffQuantityBar");
         destroyChart("trendLine");
     }
 
@@ -3179,6 +3292,73 @@
         return aggregateByPerson(orders, fieldName, options).slice(0, limit);
     }
 
+    function parseQuantityValue(value) {
+        if (typeof value === "number") {
+            return Number.isFinite(value) ? value : 0;
+        }
+
+        const textValue = String(value || "").trim();
+        if (!textValue) {
+            return 0;
+        }
+
+        let normalized = textValue.replace(/\s+/g, "");
+
+        if (normalized.includes(",") && normalized.includes(".")) {
+            const lastComma = normalized.lastIndexOf(",");
+            const lastDot = normalized.lastIndexOf(".");
+
+            if (lastComma > lastDot) {
+                normalized = normalized.replace(/\./g, "").replace(/,/g, ".");
+            } else {
+                normalized = normalized.replace(/,/g, "");
+            }
+        } else if (normalized.includes(",")) {
+            normalized = normalized.replace(/,/g, ".");
+        }
+
+        const parsed = Number(normalized);
+        return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function formatQuantityValue(value) {
+        const numeric = Number(value);
+
+        if (!Number.isFinite(numeric)) {
+            return "0";
+        }
+
+        return numeric.toLocaleString("vi-VN", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
+        });
+    }
+
+    function aggregateQuantityByPerson(orders, fieldName, options) {
+        const settings = options || {};
+        const explode = Boolean(settings.explode);
+
+        const map = new Map();
+
+        for (const order of orders) {
+            const people = splitDashboardPersonValues(order[fieldName], explode);
+            const uniquePeople = explode ? Array.from(new Set(people)) : people;
+            const quantity = parseQuantityValue(order.QuantitySK);
+
+            for (const person of uniquePeople) {
+                map.set(person, (map.get(person) || 0) + quantity);
+            }
+        }
+
+        return Array.from(map.entries())
+            .map(([name, quantity]) => ({ name, quantity }))
+            .sort((a, b) => b.quantity - a.quantity || a.name.localeCompare(b.name, "vi"));
+    }
+
+    function topPeopleByQuantity(orders, fieldName, limit, options) {
+        return aggregateQuantityByPerson(orders, fieldName, options).slice(0, limit);
+    }
+
     function renderStaffBarChart(orders, explodePeople) {
         destroyChart("staffBar");
 
@@ -3243,6 +3423,81 @@
                 plugins: {
                     legend: {
                         position: "bottom"
+                    }
+                }
+            }
+        });
+    }
+
+    function renderStaffQuantityBarChart(orders, explodePeople) {
+        destroyChart("staffQuantityBar");
+
+        if (typeof Chart === "undefined") {
+            setChartEmptyState("staffQuantityBarEmpty", "Không tải được thư viện chart.");
+            return;
+        }
+
+        const aggregateOptions = { explode: explodePeople };
+        const packers = topPeopleByQuantity(orders, "PackerND", 6, aggregateOptions);
+        const deliverers = topPeopleByQuantity(orders, "DelivererNG", 6, aggregateOptions);
+
+        const labels = Array.from(new Set([
+            ...packers.map((item) => item.name),
+            ...deliverers.map((item) => item.name)
+        ]));
+
+        if (!labels.length) {
+            setChartEmptyState("staffQuantityBarEmpty", "Không có dữ liệu để vẽ biểu đồ số kiện theo nhân sự.");
+            return;
+        }
+
+        const packerMap = new Map(packers.map((item) => [item.name, item.quantity]));
+        const delivererMap = new Map(deliverers.map((item) => [item.name, item.quantity]));
+
+        setChartEmptyState("staffQuantityBarEmpty", "");
+
+        const ctx = byId("staffQuantityBarChart");
+        state.charts.staffQuantityBar = new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels,
+                datasets: [
+                    {
+                        label: "Người đóng (kiện)",
+                        data: labels.map((label) => packerMap.get(label) || 0),
+                        backgroundColor: "rgba(14, 116, 144, 0.75)",
+                        borderColor: "#0e7490",
+                        borderWidth: 1
+                    },
+                    {
+                        label: "Người giao (kiện)",
+                        data: labels.map((label) => delivererMap.get(label) || 0),
+                        backgroundColor: "rgba(217, 119, 6, 0.75)",
+                        borderColor: "#d97706",
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                indexAxis: "y",
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: (value) => formatQuantityValue(value)
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: "bottom"
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => `${context.dataset.label}: ${formatQuantityValue(context.raw)} kiện`
+                        }
                     }
                 }
             }
@@ -3355,6 +3610,87 @@
             return;
         }
 
+        if (dashboardMode === "year") {
+            titleElement.textContent = "Xu hướng đơn hàng theo tháng trong năm";
+
+            const yearValue = normalizeYearKey(byId("dashboardYear").value);
+            if (!yearValue || !/^\d{4}$/.test(yearValue)) {
+                setChartEmptyState("trendLineEmpty", "Vui lòng chọn năm để xem xu hướng.");
+                return;
+            }
+
+            const yearOrders = orders.filter((order) => {
+                return normalizeDateKey(order.OrderDate || order.CreatedAt).startsWith(`${yearValue}-`);
+            });
+
+            if (!yearOrders.length) {
+                setChartEmptyState("trendLineEmpty", "Chưa có dữ liệu theo năm để vẽ xu hướng.");
+                return;
+            }
+
+            const counterByMonth = new Map();
+
+            for (const order of yearOrders) {
+                const iso = normalizeDateKey(order.OrderDate || order.CreatedAt);
+                if (!iso) {
+                    continue;
+                }
+
+                const monthKey = iso.slice(0, 7);
+                counterByMonth.set(monthKey, (counterByMonth.get(monthKey) || 0) + 1);
+            }
+
+            const labels = [];
+            const values = [];
+
+            for (let month = 1; month <= 12; month += 1) {
+                const monthKey = `${yearValue}-${pad2(month)}`;
+                labels.push(`${pad2(month)}/${yearValue}`);
+                values.push(counterByMonth.get(monthKey) || 0);
+            }
+
+            setChartEmptyState("trendLineEmpty", "");
+
+            const ctx = byId("trendLineChart");
+            state.charts.trendLine = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: "Số đơn / tháng",
+                            data: values,
+                            borderColor: "#6366f1",
+                            backgroundColor: "rgba(99, 102, 241, 0.18)",
+                            fill: true,
+                            tension: 0.25,
+                            pointRadius: 3,
+                            pointHoverRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: "bottom"
+                        }
+                    }
+                }
+            });
+
+            return;
+        }
+
         titleElement.textContent = "Xu hướng đơn hàng theo tháng";
 
         const monthValue = normalizeMonthKey(byId("dashboardMonth").value);
@@ -3429,16 +3765,20 @@
     }
 
     function setDashboardMode(mode) {
-        state.dashboardMode = mode === "month" ? "month" : "day";
+        const availableModes = ["day", "month", "year"];
+        state.dashboardMode = availableModes.includes(mode) ? mode : "month";
 
         byId("dashboardDayModeBtn").classList.toggle("active", state.dashboardMode === "day");
         byId("dashboardMonthModeBtn").classList.toggle("active", state.dashboardMode === "month");
+        byId("dashboardYearModeBtn").classList.toggle("active", state.dashboardMode === "year");
 
         byId("dashboardDayPanel").classList.toggle("hidden", state.dashboardMode !== "day");
         byId("dashboardMonthPanel").classList.toggle("hidden", state.dashboardMode !== "month");
+        byId("dashboardYearPanel").classList.toggle("hidden", state.dashboardMode !== "year");
 
         byId("dailyStatsCard").classList.toggle("hidden", state.dashboardMode !== "day");
         byId("monthlyStatsCard").classList.toggle("hidden", state.dashboardMode !== "month");
+        byId("yearlyStatsCard").classList.toggle("hidden", state.dashboardMode !== "year");
 
         renderDashboard();
     }
@@ -3450,9 +3790,10 @@
     }
 
     function renderDashboard() {
-        const source = state.filteredOrders;
+        const source = state.orders;
         const selectedDay = normalizeInputDateKey(byId("dashboardDay").value);
         const selectedMonth = normalizeMonthKey(byId("dashboardMonth").value);
+        const selectedYear = normalizeYearKey(byId("dashboardYear").value);
 
         const dailyOrders = selectedDay
             ? source.filter((order) => normalizeDateKey(order.OrderDate || order.CreatedAt) === selectedDay)
@@ -3462,21 +3803,39 @@
             ? source.filter((order) => normalizeDateKey(order.OrderDate || order.CreatedAt).startsWith(selectedMonth))
             : [];
 
-        byId("dailySummary").textContent = `Theo ngày ${formatDate(selectedDay)}: ${dailyOrders.length} đơn`;
-        byId("monthlySummary").textContent = `Theo tháng ${formatMonth(selectedMonth)}: ${monthlyOrders.length} đơn`;
+        const yearlyOrders = selectedYear
+            ? source.filter((order) => normalizeDateKey(order.OrderDate || order.CreatedAt).startsWith(`${selectedYear}-`))
+            : [];
 
-        const dashboardOrders = state.dashboardMode === "day" ? dailyOrders : monthlyOrders;
+        const daySummaryLabel = selectedDay ? formatDate(selectedDay) : "chưa chọn";
+        const monthSummaryLabel = selectedMonth ? formatMonth(selectedMonth) : "chưa chọn";
+        const yearSummaryLabel = selectedYear || "chưa chọn";
+
+        byId("dailySummary").textContent = `Theo ngày ${daySummaryLabel}: ${dailyOrders.length} đơn`;
+        byId("monthlySummary").textContent = `Theo tháng ${monthSummaryLabel}: ${monthlyOrders.length} đơn`;
+        byId("yearlySummary").textContent = `Theo năm ${yearSummaryLabel}: ${yearlyOrders.length} đơn`;
+
+        let dashboardOrders = monthlyOrders;
+        if (state.dashboardMode === "day") {
+            dashboardOrders = dailyOrders;
+        } else if (state.dashboardMode === "year") {
+            dashboardOrders = yearlyOrders;
+        }
+
         const personAggregateOptions = { explode: state.dashboardExplode };
 
         renderKpis(dashboardOrders);
         renderStatusPieChart(dashboardOrders);
         renderStaffBarChart(dashboardOrders, state.dashboardExplode);
+        renderStaffQuantityBarChart(dashboardOrders, state.dashboardExplode);
         renderTrendLineChart(source, state.dashboardMode);
 
         renderStatsTable(byId("dailyPackerStats"), aggregateByPerson(dailyOrders, "PackerND", personAggregateOptions));
         renderStatsTable(byId("dailyDelivererStats"), aggregateByPerson(dailyOrders, "DelivererNG", personAggregateOptions));
         renderStatsTable(byId("monthlyPackerStats"), aggregateByPerson(monthlyOrders, "PackerND", personAggregateOptions));
         renderStatsTable(byId("monthlyDelivererStats"), aggregateByPerson(monthlyOrders, "DelivererNG", personAggregateOptions));
+        renderStatsTable(byId("yearlyPackerStats"), aggregateByPerson(yearlyOrders, "PackerND", personAggregateOptions));
+        renderStatsTable(byId("yearlyDelivererStats"), aggregateByPerson(yearlyOrders, "DelivererNG", personAggregateOptions));
     }
 
     function buildStatusFilterOptions() {
@@ -4524,7 +4883,6 @@
         state.filteredOrders = state.orders.filter((order) => matchesFilters(order, filters));
 
         renderByCurrentView();
-        renderDashboard();
         updateStatusLine();
     }
 
@@ -4832,11 +5190,13 @@
 
         byId("dashboardDayModeBtn").addEventListener("click", () => setDashboardMode("day"));
         byId("dashboardMonthModeBtn").addEventListener("click", () => setDashboardMode("month"));
+        byId("dashboardYearModeBtn").addEventListener("click", () => setDashboardMode("year"));
         byId("dashboardExplodeToggle").addEventListener("change", (event) => {
             setDashboardExplode(event.target.checked);
         });
         byId("dashboardDay").addEventListener("change", renderDashboard);
         byId("dashboardMonth").addEventListener("change", renderDashboard);
+        byId("dashboardYear").addEventListener("change", renderDashboard);
 
         byId("editModal").addEventListener("click", (event) => {
             if (event.target.id === "editModal") {
@@ -4930,6 +5290,7 @@
         const today = new Date();
         setDateControlValue("dashboardDay", toIsoDate(today));
         setDateControlValue("dashboardMonth", `${today.getFullYear()}-${pad2(today.getMonth() + 1)}`);
+        setDateControlValue("dashboardYear", String(today.getFullYear()));
         byId("dashboardExplodeToggle").checked = false;
         state.dashboardExplode = false;
         setDashboardMode("month");
