@@ -111,15 +111,9 @@
                 background: var(--panel);
                 border: 1px solid var(--border);
                 border-radius: 12px;
-                padding: 12px;
-                flex-direction: column;
-                align-items: stretch;
-                gap: 10px;
-                box-shadow: 0 10px 25px rgba(15, 23, 42, 0.25), 0 0 15px var(--brand-glow);
                 z-index: 1001;
             }
 
-            /* Khi mở menu */
             .header-actions.show {
                 display: flex !important;
                 animation: fadeInDown 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -142,6 +136,7 @@
                 opacity: 0;
                 transform: translateY(-8px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -174,12 +169,10 @@
         button:hover {
             background: var(--brand);
             color: #ffffff;
-            box-shadow: 0 4px 12px var(--brand-glow);
         }
 
         button:disabled {
             opacity: 0.4;
-            cursor: not-allowed;
             box-shadow: none;
             border-color: var(--border);
             color: var(--muted);
@@ -371,9 +364,15 @@
             display: flex;
             flex-wrap: wrap;
             gap: 12px;
-            justify-content: space-between;
-            align-items: center;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .toolbar h2 {
+            margin: 0;
+            font-size: 19px;
+            color: var(--brand);
         }
 
         .filters {
@@ -404,7 +403,7 @@
         }
 
         #searchInput {
-            min-width: 310px;
+            min-width: 400px;
             flex: 1;
         }
 
@@ -571,7 +570,7 @@
 
         .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(5, minmax(0, 1fr));
+            grid-template-columns: repeat(6, minmax(0, 1fr));
             gap: 10px;
             margin-bottom: 14px;
         }
@@ -846,6 +845,12 @@
             background: #e0f2fe;
             color: #0c4a6e;
             border-color: #bae6fd;
+        }
+
+        .status.warning {
+            background: #fff7ed;
+            color: #9a3412;
+            border-color: #fdba74;
         }
 
         .status.unknown {
@@ -1496,6 +1501,14 @@
 
         <section id="ordersTab" class="app-tab-panel">
             <div class="toolbar">
+                <h2>Danh sách đơn hàng</h2>
+                <div class="list-view-switch-wrap">
+                    <div class="view-switch">
+                        <button id="gridViewBtn" type="button" class="toggle active">Hiển thị dạng lưới</button>
+                        <button id="tableViewBtn" type="button" class="toggle">Hiển thị dạng bảng</button>
+                    </div>
+                </div>
+
                 <div class="filters">
                     <input id="searchInput" type="search" placeholder="Tìm theo mã đơn, khách hàng, người đóng, người giao...">
 
@@ -1507,13 +1520,6 @@
                     <input id="dateTo" type="date" title="Đến ngày">
 
                     <button id="clearFiltersBtn" type="button" class="secondary">Xóa lọc</button>
-                </div>                
-
-                <div class="list-view-switch-wrap">
-                    <div class="view-switch">
-                        <button id="gridViewBtn" type="button" class="toggle active">Grid</button>
-                        <button id="tableViewBtn" type="button" class="toggle">Table</button>
-                    </div>
                 </div>
             </div>
 
@@ -1577,17 +1583,17 @@
 
                 <div class="kpi-grid">
                     <article class="kpi-card">
-                        <p class="kpi-label">Tổng đơn đang hiển thị</p>
+                        <p class="kpi-label">Tổng đơn</p>
                         <p id="kpiTotalOrders" class="kpi-value">0</p>
                     </article>
 
                     <article class="kpi-card">
-                        <p class="kpi-label">Hoàn thành</p>
+                        <p class="kpi-label">Thành công</p>
                         <p id="kpiCompleted" class="kpi-value">0</p>
                     </article>
 
                     <article class="kpi-card">
-                        <p class="kpi-label">Đang xử lý</p>
+                        <p class="kpi-label">AI đang đọc</p>
                         <p id="kpiProcessing" class="kpi-value">0</p>
                     </article>
 
@@ -1597,8 +1603,13 @@
                     </article>
 
                     <article class="kpi-card">
-                        <p class="kpi-label">Trùng lặp</p>
+                        <p class="kpi-label">Trùng đơn hàng</p>
                         <p id="kpiDuplicated" class="kpi-value">0</p>
+                    </article>
+
+                    <article class="kpi-card">
+                        <p class="kpi-label">Thiếu thông tin</p>
+                        <p id="kpiWarning" class="kpi-value">0</p>
                     </article>
                 </div>
 
@@ -1773,9 +1784,11 @@
                     Trạng thái
                     <select id="editStatus" required>
                         <option value="" selected disabled>Chọn trạng thái</option>
-                        <option value="ai_processing">ai_processing</option>
-                        <option value="completed">completed</option>
-                        <option value="failed">failed</option>
+                        <option value="ai_processing">AI đang đọc</option>
+                        <option value="completed">Thành công</option>
+                        <option value="failed">Thất bại</option>
+                        <option value="duplicated">Trùng đơn hàng</option>
+                        <option value="warning">Thiếu thông tin</option>
                     </select>
                 </label>
 
@@ -1947,7 +1960,14 @@
     const EMPLOYEE_TABLE = "employees";
     const AI_API_KEYS_TABLE = "ai_api_keys";
     const BUCKET_NAME = "order-images";
-    const ORDER_STATUSES = ["ai_processing", "completed", "failed", "duplicated"];
+    const ORDER_STATUSES = ["ai_processing", "completed", "failed", "duplicated", "warning"];
+    const STATUS_LABELS = {
+        ai_processing: "AI đang đọc",
+        completed: "Thành công",
+        failed: "Thất bại",
+        duplicated: "Trùng đơn hàng",
+        warning: "Thiếu thông tin"
+    };
 
     const supabaseClient = window.supabase
         ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
@@ -2198,6 +2218,16 @@
         return ORDER_STATUSES.includes(normalized) ? normalized : "";
     }
 
+    function statusDisplayName(value) {
+        const normalized = normalizeStatusValue(value);
+
+        if (!normalized) {
+            return "-";
+        }
+
+        return STATUS_LABELS[normalized] || normalized;
+    }
+
     function statusToClass(value) {
         const normalized = normalizeStatusValue(value);
 
@@ -2215,6 +2245,10 @@
 
         if (normalized === "duplicated") {
             return "duplicated";
+        }
+
+        if (normalized === "warning") {
+            return "warning";
         }
 
         return "unknown";
@@ -2492,7 +2526,7 @@
             const normalizedStatus = normalizeStatusValue(valueText);
             const chip = document.createElement("span");
             chip.className = `status ${statusToClass(normalizedStatus)}`;
-            chip.textContent = normalizedStatus || "-";
+            chip.textContent = statusDisplayName(normalizedStatus);
             value.appendChild(chip);
         } else {
             value.textContent = valueText || "-";
@@ -2631,7 +2665,7 @@
             const normalizedStatus = normalizeStatusValue(order.Status);
             const chip = document.createElement("span");
             chip.className = `status ${statusToClass(normalizedStatus)}`;
-            chip.textContent = normalizedStatus || "-";
+            chip.textContent = statusDisplayName(normalizedStatus);
             statusCell.appendChild(chip);
             row.appendChild(statusCell);
 
@@ -2791,6 +2825,7 @@
             processing: 0,
             failed: 0,
             duplicated: 0,
+            warning: 0,
             other: 0
         };
 
@@ -2805,6 +2840,8 @@
                 summary.failed += 1;
             } else if (normalized === "duplicated") {
                 summary.duplicated += 1;
+            } else if (normalized === "warning") {
+                summary.warning += 1;
             } else {
                 summary.other += 1;
             }
@@ -2849,6 +2886,7 @@
         byId("kpiProcessing").textContent = String(summary.processing);
         byId("kpiFailed").textContent = String(summary.failed);
         byId("kpiDuplicated").textContent = String(summary.duplicated);
+        byId("kpiWarning").textContent = String(summary.warning);
     }
 
     function renderStatusPieChart(orders) {
@@ -2865,27 +2903,33 @@
         const colors = [];
 
         if (summary.completed > 0) {
-            labels.push("Hoàn thành");
+            labels.push(statusDisplayName("completed"));
             values.push(summary.completed);
             colors.push("#22c55e");
         }
 
         if (summary.processing > 0) {
-            labels.push("Đang xử lý");
+            labels.push(statusDisplayName("ai_processing"));
             values.push(summary.processing);
             colors.push("#f59e0b");
         }
 
         if (summary.failed > 0) {
-            labels.push("Thất bại");
+            labels.push(statusDisplayName("failed"));
             values.push(summary.failed);
             colors.push("#ef4444");
         }
 
         if (summary.duplicated > 0) {
-            labels.push("Trùng lặp");
+            labels.push(statusDisplayName("duplicated"));
             values.push(summary.duplicated);
             colors.push("#0ea5e9");
+        }
+
+        if (summary.warning > 0) {
+            labels.push(statusDisplayName("warning"));
+            values.push(summary.warning);
+            colors.push("#f97316");
         }
 
         if (summary.other > 0) {
@@ -3249,7 +3293,7 @@
         for (const status of ORDER_STATUSES) {
             const option = document.createElement("option");
             option.value = status;
-            option.textContent = status;
+            option.textContent = statusDisplayName(status);
             select.appendChild(option);
         }
 
@@ -4258,7 +4302,7 @@
             return;
         }
 
-        const realtimeText = state.realtimeChannel ? "Realtime: đang kết nối" : "Realtime: chưa kết nối";
+        const realtimeText = state.realtimeChannel ? "Realtime: đã kết nối" : "Realtime: chưa kết nối";
         const realtimeStamp = state.lastRealtimeStamp ? ` | Cập nhật realtime lúc ${state.lastRealtimeStamp}` : "";
 
         statusElement.textContent = `Hiển thị ${state.filteredOrders.length}/${state.orders.length} đơn hàng | ${realtimeText}${realtimeStamp}`;
@@ -4467,6 +4511,7 @@
             byId("kpiProcessing").textContent = "0";
             byId("kpiFailed").textContent = "0";
             byId("kpiDuplicated").textContent = "0";
+            byId("kpiWarning").textContent = "0";
             buildStatusFilterOptions();
             renderEmployeeSelectOptions();
             renderEmployeesAdminTable();
