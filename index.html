@@ -1126,6 +1126,11 @@
             z-index: 1;
         }
 
+        .admin-table .table-row-inactive {
+            opacity: 0.5;
+            color: #9ca3af;
+        }
+
         .admin-key {
             font-family: 'Fira Code', Consolas, Monaco, monospace;
             color: var(--brand);
@@ -4843,6 +4848,10 @@
 
         for (const apiKey of state.apiKeys) {
             const row = document.createElement("tr");
+            // Nếu không hoạt động thì thêm class để highlight
+            if (!apiKey.is_active) {
+                row.classList.add("table-row-inactive");
+            }
 
             row.appendChild(createTableCell(String(apiKey.id ?? "-"), ""));
             row.appendChild(createTableCell(apiKey.provider || "-", ""));
