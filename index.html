@@ -708,8 +708,9 @@
 
         .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: repeat(1, minmax(0, 1fr));
             gap: 14px;
+            margin-bottom: 14px;
         }
 
         .dash-card {
@@ -720,6 +721,7 @@
         }
 
         .dash-card h3 {
+            text-align: center;
             margin: 0 0 10px;
             font-size: 16px;
             color: var(--text);
@@ -1693,7 +1695,9 @@
                             <div id="statusPieEmpty" class="chart-empty hidden">Không có dữ liệu để vẽ biểu đồ trạng thái.</div>
                         </div>
                     </article>
+                </div>
 
+                <div class="charts-grid">
                     <article class="chart-card">
                         <h3>TOP NHÂN SỰ THEO SỐ ĐƠN</h3>
                         <div class="chart-count" id="topStaffByOrdersCount"></div>
@@ -1712,14 +1716,7 @@
                         </div>
                     </article>
 
-                    <article class="chart-card wide">
-                        <h3 id="trendLineTitle">XU HƯỚNG THEO THÁNG ĐÃ CHỌN</h3>
-                        <div class="chart-count" id="trendLineOrdersCount"></div>
-                        <div class="chart-canvas-wrap">
-                            <canvas id="trendLineChart"></canvas>
-                            <div id="trendLineEmpty" class="chart-empty hidden">Chưa có dữ liệu theo tháng để vẽ xu hướng.</div>
-                        </div>
-                    </article>
+                    
                 </div>
 
                 <div class="dashboard-grid">
@@ -1765,6 +1762,17 @@
                                 <h4>Người giao</h4>
                                 <div id="yearlyDelivererStats" class="stats-table"></div>
                             </div>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="dashboard-grid">
+                    <article class="chart-card wide">
+                        <h3 id="trendLineTitle">XU HƯỚNG THEO THÁNG ĐÃ CHỌN</h3>
+                        <div class="chart-count" id="trendLineOrdersCount"></div>
+                        <div class="chart-canvas-wrap">
+                            <canvas id="trendLineChart"></canvas>
+                            <div id="trendLineEmpty" class="chart-empty hidden">Chưa có dữ liệu theo tháng để vẽ xu hướng.</div>
                         </div>
                     </article>
                 </div>
@@ -3090,8 +3098,9 @@
             const people = splitDashboardPersonValues(order[fieldName], explode);
             const uniquePeople = explode ? Array.from(new Set(people)) : people;
 
+            // Nếu explode = true thì mỗi người được chia ra 1 phần đơn, ví dụ: 1 đơn có 2 người đóng thì mỗi người 0.5 đơn
             for (const person of uniquePeople) {
-                map.set(person, (map.get(person) || 0) + 1);
+                map.set(person, (map.get(person) || 0) + (explode ? 1 / uniquePeople.length : 1));
             }
         }
 
@@ -3114,7 +3123,7 @@
         const thead = document.createElement("thead");
         const headerRow = document.createElement("tr");
 
-        ["#", "Nhân sự", "Số đơn"].forEach((title) => {
+        ["#", "Nhân sự", "Số đơn", "Số kiện"].forEach((title) => {
             const th = document.createElement("th");
             th.textContent = title;
             headerRow.appendChild(th);
@@ -3129,7 +3138,8 @@
             const row = document.createElement("tr");
             row.appendChild(createTableCell(String(index + 1), ""));
             row.appendChild(createTableCell(item.name, ""));
-            row.appendChild(createTableCell(String(item.count), ""));
+            row.appendChild(createTableCell(formatQuantityValue(item.count), ""));
+            row.appendChild(createTableCell(formatQuantityValue(item.quantity), ""));
             tbody.appendChild(row);
         });
 
@@ -3358,14 +3368,27 @@
             const uniquePeople = explode ? Array.from(new Set(people)) : people;
             const quantity = parseQuantityValue(order.QuantitySK);
 
+            // Số kiện chia đều cho các nhân sự nếu explode = true, nếu không thì tính tổng số kiện cho mỗi nhân sự.
             for (const person of uniquePeople) {
-                map.set(person, (map.get(person) || 0) + quantity);
+                map.set(person, (map.get(person) || 0) + (explode ? quantity / uniquePeople.length : quantity));
             }
         }
 
         return Array.from(map.entries())
             .map(([name, quantity]) => ({ name, quantity }))
             .sort((a, b) => b.quantity - a.quantity || a.name.localeCompare(b.name, "vi"));
+    }
+
+    function buildPersonStatsRows(orders, fieldName, options) {
+        const countRows = aggregateByPerson(orders, fieldName, options);
+        const quantityRows = aggregateQuantityByPerson(orders, fieldName, options);
+        const quantityMap = new Map(quantityRows.map((item) => [item.name, item.quantity]));
+
+        return countRows.map((item) => ({
+            name: item.name,
+            count: item.count,
+            quantity: quantityMap.get(item.name) || 0
+        }));
     }
 
     function topPeopleByQuantity(orders, fieldName, limit, options) {
@@ -3553,6 +3576,22 @@
         return counter;
     }
 
+    function countQuantityByDate(orders) {
+        const counter = new Map();
+
+        for (const order of orders) {
+            const key = normalizeDateKey(order.OrderDate || order.CreatedAt);
+            if (!key) {
+                continue;
+            }
+
+            const quantity = parseQuantityValue(order.QuantitySK);
+            counter.set(key, (counter.get(key) || 0) + quantity);
+        }
+
+        return counter;
+    }
+
     function renderTrendLineChart(orders, dashboardMode) {
         destroyChart("trendLine");
 
@@ -3561,7 +3600,8 @@
             return;
         }
 
-        byId("trendLineOrdersCount").textContent = `(Dựa theo ${orders.length} đơn hàng thành công)`;
+        const totalQuantity = orders.reduce((sum, order) => sum + parseQuantityValue(order.QuantitySK), 0);
+        byId("trendLineOrdersCount").textContent = `(Dựa theo ${orders.length} đơn hàng thành công, ${formatQuantityValue(totalQuantity)} kiện)`;
         const titleElement = byId("trendLineTitle");
 
         if (dashboardMode === "day") {
@@ -3576,8 +3616,10 @@
             }
 
             const counter = countOrdersByDate(orders);
+            const quantityCounter = countQuantityByDate(orders);
             const labels = [];
             const values = [];
+            const quantityValues = [];
 
             for (let offset = -3; offset <= 3; offset += 1) {
                 const date = new Date(centerDate);
@@ -3586,6 +3628,7 @@
                 const iso = toIsoDate(date);
                 labels.push(`${pad2(date.getDate())}/${pad2(date.getMonth() + 1)}`);
                 values.push(counter.get(iso) || 0);
+                quantityValues.push(quantityCounter.get(iso) || 0);
             }
 
             setChartEmptyState("trendLineEmpty", "");
@@ -3604,7 +3647,19 @@
                             fill: true,
                             tension: 0.25,
                             pointRadius: 3,
-                            pointHoverRadius: 4
+                            pointHoverRadius: 4,
+                            yAxisID: "yOrders"
+                        },
+                        {
+                            label: "Số kiện / ngày",
+                            data: quantityValues,
+                            borderColor: "#d97706",
+                            backgroundColor: "rgba(217, 119, 6, 0.15)",
+                            fill: false,
+                            tension: 0.25,
+                            pointRadius: 3,
+                            pointHoverRadius: 4,
+                            yAxisID: "yQuantity"
                         }
                     ]
                 },
@@ -3612,16 +3667,45 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        y: {
+                        yOrders: {
                             beginAtZero: true,
                             ticks: {
                                 precision: 0
+                            },
+                            title: {
+                                display: true,
+                                text: "Số đơn"
+                            }
+                        },
+                        yQuantity: {
+                            beginAtZero: true,
+                            position: "right",
+                            grid: {
+                                drawOnChartArea: false
+                            },
+                            ticks: {
+                                callback: (value) => formatQuantityValue(value)
+                            },
+                            title: {
+                                display: true,
+                                text: "Số kiện"
                             }
                         }
                     },
                     plugins: {
                         legend: {
                             position: "bottom"
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    if (context.dataset.yAxisID === "yQuantity") {
+                                        return `${context.dataset.label}: ${formatQuantityValue(context.raw)} kiện`;
+                                    }
+
+                                    return `${context.dataset.label}: ${context.raw} đơn`;
+                                }
+                            }
                         }
                     }
                 }
@@ -3649,6 +3733,7 @@
             }
 
             const counterByMonth = new Map();
+            const quantityByMonth = new Map();
 
             for (const order of yearOrders) {
                 const iso = normalizeDateKey(order.OrderDate || order.CreatedAt);
@@ -3658,15 +3743,20 @@
 
                 const monthKey = iso.slice(0, 7);
                 counterByMonth.set(monthKey, (counterByMonth.get(monthKey) || 0) + 1);
+
+                const quantity = parseQuantityValue(order.QuantitySK);
+                quantityByMonth.set(monthKey, (quantityByMonth.get(monthKey) || 0) + quantity);
             }
 
             const labels = [];
             const values = [];
+            const quantityValues = [];
 
             for (let month = 1; month <= 12; month += 1) {
                 const monthKey = `${yearValue}-${pad2(month)}`;
                 labels.push(`${pad2(month)}/${yearValue}`);
                 values.push(counterByMonth.get(monthKey) || 0);
+                quantityValues.push(quantityByMonth.get(monthKey) || 0);
             }
 
             setChartEmptyState("trendLineEmpty", "");
@@ -3685,7 +3775,19 @@
                             fill: true,
                             tension: 0.25,
                             pointRadius: 3,
-                            pointHoverRadius: 4
+                            pointHoverRadius: 4,
+                            yAxisID: "yOrders"
+                        },
+                        {
+                            label: "Số kiện / tháng",
+                            data: quantityValues,
+                            borderColor: "#d97706",
+                            backgroundColor: "rgba(217, 119, 6, 0.15)",
+                            fill: false,
+                            tension: 0.25,
+                            pointRadius: 3,
+                            pointHoverRadius: 4,
+                            yAxisID: "yQuantity"
                         }
                     ]
                 },
@@ -3693,16 +3795,45 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        y: {
+                        yOrders: {
                             beginAtZero: true,
                             ticks: {
                                 precision: 0
+                            },
+                            title: {
+                                display: true,
+                                text: "Số đơn"
+                            }
+                        },
+                        yQuantity: {
+                            beginAtZero: true,
+                            position: "right",
+                            grid: {
+                                drawOnChartArea: false
+                            },
+                            ticks: {
+                                callback: (value) => formatQuantityValue(value)
+                            },
+                            title: {
+                                display: true,
+                                text: "Số kiện"
                             }
                         }
                     },
                     plugins: {
                         legend: {
                             position: "bottom"
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    if (context.dataset.yAxisID === "yQuantity") {
+                                        return `${context.dataset.label}: ${formatQuantityValue(context.raw)} kiện`;
+                                    }
+
+                                    return `${context.dataset.label}: ${context.raw} đơn`;
+                                }
+                            }
                         }
                     }
                 }
@@ -3734,14 +3865,17 @@
         const totalDays = new Date(year, month, 0).getDate();
 
         const dailyCounter = countOrdersByDate(monthOrders);
+        const dailyQuantityCounter = countQuantityByDate(monthOrders);
 
         const labels = [];
         const values = [];
+        const quantityValues = [];
 
         for (let day = 1; day <= totalDays; day += 1) {
             const iso = `${yearString}-${monthString}-${pad2(day)}`;
             labels.push(`${pad2(day)}/${monthString}`);
             values.push(dailyCounter.get(iso) || 0);
+            quantityValues.push(dailyQuantityCounter.get(iso) || 0);
         }
 
         setChartEmptyState("trendLineEmpty", "");
@@ -3760,7 +3894,19 @@
                         fill: true,
                         tension: 0.25,
                         pointRadius: 3,
-                        pointHoverRadius: 4
+                        pointHoverRadius: 4,
+                        yAxisID: "yOrders"
+                    },
+                    {
+                        label: "Số kiện",
+                        data: quantityValues,
+                        borderColor: "#d97706",
+                        backgroundColor: "rgba(217, 119, 6, 0.15)",
+                        fill: false,
+                        tension: 0.25,
+                        pointRadius: 3,
+                        pointHoverRadius: 4,
+                        yAxisID: "yQuantity"
                     }
                 ]
             },
@@ -3768,16 +3914,45 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
-                    y: {
+                    yOrders: {
                         beginAtZero: true,
                         ticks: {
                             precision: 0
+                        },
+                        title: {
+                            display: true,
+                            text: "Số đơn"
+                        }
+                    },
+                    yQuantity: {
+                        beginAtZero: true,
+                        position: "right",
+                        grid: {
+                            drawOnChartArea: false
+                        },
+                        ticks: {
+                            callback: (value) => formatQuantityValue(value)
+                        },
+                        title: {
+                            display: true,
+                            text: "Số kiện"
                         }
                     }
                 },
                 plugins: {
                     legend: {
                         position: "bottom"
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => {
+                                if (context.dataset.yAxisID === "yQuantity") {
+                                    return `${context.dataset.label}: ${formatQuantityValue(context.raw)} kiện`;
+                                }
+
+                                return `${context.dataset.label}: ${context.raw} đơn`;
+                            }
+                        }
                     }
                 }
             }
@@ -3856,12 +4031,12 @@
         renderTrendLineChart(dashboardOrders, state.dashboardMode);
 
         const personAggregateOptions = { explode: state.dashboardExplode };
-        renderStatsTable(byId("dailyPackerStats"), aggregateByPerson(dailyOrders, "PackerND", personAggregateOptions));
-        renderStatsTable(byId("dailyDelivererStats"), aggregateByPerson(dailyOrders, "DelivererNG", personAggregateOptions));
-        renderStatsTable(byId("monthlyPackerStats"), aggregateByPerson(monthlyOrders, "PackerND", personAggregateOptions));
-        renderStatsTable(byId("monthlyDelivererStats"), aggregateByPerson(monthlyOrders, "DelivererNG", personAggregateOptions));
-        renderStatsTable(byId("yearlyPackerStats"), aggregateByPerson(yearlyOrders, "PackerND", personAggregateOptions));
-        renderStatsTable(byId("yearlyDelivererStats"), aggregateByPerson(yearlyOrders, "DelivererNG", personAggregateOptions));
+        renderStatsTable(byId("dailyPackerStats"), buildPersonStatsRows(dailyOrders, "PackerND", personAggregateOptions));
+        renderStatsTable(byId("dailyDelivererStats"), buildPersonStatsRows(dailyOrders, "DelivererNG", personAggregateOptions));
+        renderStatsTable(byId("monthlyPackerStats"), buildPersonStatsRows(monthlyOrders, "PackerND", personAggregateOptions));
+        renderStatsTable(byId("monthlyDelivererStats"), buildPersonStatsRows(monthlyOrders, "DelivererNG", personAggregateOptions));
+        renderStatsTable(byId("yearlyPackerStats"), buildPersonStatsRows(yearlyOrders, "PackerND", personAggregateOptions));
+        renderStatsTable(byId("yearlyDelivererStats"), buildPersonStatsRows(yearlyOrders, "DelivererNG", personAggregateOptions));
     }
 
     function buildStatusFilterOptions() {
