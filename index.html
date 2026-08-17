@@ -4849,7 +4849,7 @@
         for (const apiKey of state.apiKeys) {
             const row = document.createElement("tr");
             // Nếu không hoạt động thì thêm class để highlight
-            if (!apiKey.is_active) {
+            if (!apiKey.is_active || apiKey.error_count > 0) {
                 row.classList.add("table-row-inactive");
             }
 
