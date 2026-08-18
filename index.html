@@ -374,6 +374,27 @@
             color: var(--brand);
         }
 
+        .toolbar-header {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            align-items: center;
+            gap: 5px;
+        }
+
+        @media (max-width: 760px) {
+            #exportBtn {
+                width: 180px;
+            }
+        }
+
+        .status-order-bar {
+            color: var(--muted);
+            font-weight: 600;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+
         .filters {
             display: flex;
             gap: 8px;
@@ -496,6 +517,12 @@
             background: var(--panel);
             color: var(--brand);
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        @media (max-width: 760px) {
+            .dashboard-mode-btn {
+                min-width: unset;
+            }
         }
 
         .dashboard-mode-panel {
@@ -1479,6 +1506,7 @@
 
             .list-view-switch-wrap {
                 justify-content: stretch;
+                width: 100%;
             }
 
             .app-tabs {
@@ -1533,7 +1561,6 @@
         <div class="header-actions" id="headerActions">
             <span id="currentUser" class="user-badge">Chưa đăng nhập</span>
             <button id="refreshBtn" type="button" disabled>🔄 Làm mới</button>
-            <button id="exportBtn" type="button" disabled>⬇️ Tải Excel</button>
             <button id="logoutBtn" type="button" class="danger" disabled>Đăng xuất</button>
         </div>
     </div>
@@ -1572,12 +1599,19 @@
 
         <section id="ordersTab" class="app-tab-panel">
             <div class="toolbar">
-                <h2>Danh sách đơn hàng</h2>
-                <div class="list-view-switch-wrap">
-                    <div class="view-switch">
-                        <button id="gridViewBtn" type="button" class="toggle active">Hiển thị dạng lưới</button>
-                        <button id="tableViewBtn" type="button" class="toggle">Hiển thị dạng bảng</button>
+                <div class="toolbar-header">
+                    <h2>Danh sách đơn hàng</h2>
+                    <div id="status_order" class="status-order-bar"></div>
+                </div>
+                <div class="toolbar-header">
+                    <div class="list-view-switch-wrap">
+                        <div class="view-switch">
+                            <button id="gridViewBtn" type="button" class="toggle active">Dạng lưới</button>
+                            <button id="tableViewBtn" type="button" class="toggle">Dạng bảng</button>
+                        </div>
                     </div>
+
+                    <button id="exportBtn" type="button">⬇️ Tải Excel</button>
                 </div>
 
                 <div class="filters">
@@ -1654,7 +1688,7 @@
                         <input id="dashboardExplodeToggle" type="checkbox">
                         <span class="dashboard-explode-text">
                             <span class="dashboard-explode-title">Tách đơn theo từng nhân viên</span>
-                            <span class="dashboard-explode-desc">(Ví dụ: DUNG + VĨ sẽ tính thành 2 đơn riêng.)</span>
+                            <!-- <span class="dashboard-explode-desc">(Ví dụ: DUNG + VĨ sẽ tính thành 2 đơn riêng.)</span> -->
                         </span>
                     </label>
                 </div>
@@ -1789,7 +1823,6 @@
                 <div class="admin-head">
                     <div>
                         <h2>Danh sách nhân viên</h2>
-                        <p>Thêm, sửa, xóa nhân viên trong bảng Supabase employees.</p>
                     </div>
                     <div class="admin-head-actions">
                         <button id="openEmployeeModalBtn" type="button">➕ Thêm nhân viên</button>
@@ -1821,7 +1854,6 @@
                 <div class="admin-head">
                     <div>
                         <h2>Danh sách tài khoản AI</h2>
-                        <p>Thêm, sửa, xóa tài khoản AI trong bảng Supabase ai_api_keys.</p>
                     </div>
 
                     <div class="admin-head-actions">
@@ -3651,8 +3683,9 @@
                             backgroundColor: "rgba(99, 102, 241, 0.18)",
                             fill: true,
                             tension: 0.25,
-                            pointRadius: 3,
-                            pointHoverRadius: 4,
+                            borderWidth: 0.5,
+                            pointRadius: 1,
+                            pointHoverRadius: 2,
                             yAxisID: "yOrders"
                         },
                         {
@@ -3662,8 +3695,9 @@
                             backgroundColor: "rgba(217, 119, 6, 0.15)",
                             fill: false,
                             tension: 0.25,
-                            pointRadius: 3,
-                            pointHoverRadius: 4,
+                            borderWidth: 0.5,
+                            pointRadius: 1,
+                            pointHoverRadius: 2,
                             yAxisID: "yQuantity"
                         }
                     ]
@@ -5061,16 +5095,19 @@
 
     function updateStatusLine(customText) {
         const statusElement = byId("status");
+        const statusOrderElement = byId("status_order");
 
         if (customText) {
             statusElement.textContent = customText;
+            statusOrderElement.textContent = "";
             return;
         }
 
         const realtimeText = state.realtimeChannel ? "Realtime: đã kết nối" : "Realtime: chưa kết nối";
         const realtimeStamp = state.lastRealtimeStamp ? ` | Cập nhật realtime lúc ${state.lastRealtimeStamp}` : "";
 
-        statusElement.textContent = `Hiển thị ${state.filteredOrders.length}/${state.orders.length} đơn hàng | ${realtimeText}${realtimeStamp}`;
+        statusElement.textContent = `Tổng: ${state.orders.length} đơn hàng | ${realtimeText}${realtimeStamp}`;
+        statusOrderElement.textContent = `${state.filteredOrders.length}/${state.orders.length} đơn hàng`;
     }
 
     function applyFiltersAndRender() {
@@ -5502,8 +5539,8 @@
         setDateControlValue("dashboardDay", toIsoDate(today));
         setDateControlValue("dashboardMonth", `${today.getFullYear()}-${pad2(today.getMonth() + 1)}`);
         setDateControlValue("dashboardYear", String(today.getFullYear()));
-        byId("dashboardExplodeToggle").checked = false;
-        state.dashboardExplode = false;
+        byId("dashboardExplodeToggle").checked = true;
+        state.dashboardExplode = true;
         setDashboardMode("month");
 
         if (!supabaseClient) {
