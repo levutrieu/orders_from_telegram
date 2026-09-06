@@ -646,7 +646,7 @@
 
         .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(6, minmax(0, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
             gap: 10px;
             margin-bottom: 14px;
         }
@@ -758,7 +758,7 @@
 
         .dash-cols {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 10px;
         }
 
@@ -883,7 +883,7 @@
             align-items: flex-start;
             gap: 10px;
             margin: 0;
-            padding: 7px 5px;
+            padding: 5px;
         }
 
         .label {
@@ -929,6 +929,12 @@
             background: #ffe4e6;
             color: #be123c;
             border-color: #fecdd3;
+        }
+
+        .status.canceled {
+            background: #e5e7eb;
+            color: #374151;
+            border-color: #d1d5db;
         }
 
         .status.duplicated {
@@ -1414,7 +1420,7 @@
 
         .employee-grid {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 12px;
         }
 
@@ -1627,7 +1633,7 @@
                 </div>
 
                 <div class="filters">
-                    <input id="searchInput" type="search" placeholder="Tìm theo mã đơn, khách hàng, người đóng, người giao...">
+                    <input id="searchInput" type="search" placeholder="Tìm theo mã đơn, khách hàng, người đóng, người soạn, người giao...">
 
                     <select id="statusFilter">
                         <option value="">Tất cả trạng thái</option>
@@ -1650,6 +1656,7 @@
                         <th>Ngày</th>
                         <th>Khách hàng</th>
                         <th>Số kiện</th>
+                        <th>Người soạn</th>
                         <th>Người đóng</th>
                         <th>Người giao</th>
                         <th>Trạng thái</th>
@@ -1722,11 +1729,6 @@
                     </article>
 
                     <article class="kpi-card">
-                        <p class="kpi-label">Thất bại</p>
-                        <p id="kpiFailed" class="kpi-value">0</p>
-                    </article>
-
-                    <article class="kpi-card">
                         <p class="kpi-label">Trùng đơn hàng</p>
                         <p id="kpiDuplicated" class="kpi-value">0</p>
                     </article>
@@ -1734,6 +1736,16 @@
                     <article class="kpi-card">
                         <p class="kpi-label">Thiếu thông tin</p>
                         <p id="kpiWarning" class="kpi-value">0</p>
+                    </article>
+
+                    <article class="kpi-card">
+                        <p class="kpi-label">Thất bại</p>
+                        <p id="kpiFailed" class="kpi-value">0</p>
+                    </article>
+
+                    <article class="kpi-card">
+                        <p class="kpi-label">Đã hủy</p>
+                        <p id="kpiCanceled" class="kpi-value">0</p>
                     </article>
                 </div>
 
@@ -1773,6 +1785,11 @@
                         <h3 id="monthlySummary">Theo tháng</h3>
                         <div class="dash-cols">
                             <div>
+                                <h4>Người soạn</h4>
+                                <div id="monthlyPickerStats" class="stats-table"></div>
+                            </div>
+
+                            <div>
                                 <h4>Người đóng</h4>
                                 <div id="monthlyPackerStats" class="stats-table"></div>
                             </div>
@@ -1788,10 +1805,15 @@
                         <h3 id="dailySummary">Theo ngày</h3>
                         <div class="dash-cols">
                             <div>
+                                <h4>Người soạn</h4>
+                                <div id="dailyPickerStats" class="stats-table"></div>
+                            </div>
+
+                            <div>
                                 <h4>Người đóng</h4>
                                 <div id="dailyPackerStats" class="stats-table"></div>
                             </div>
-
+                            
                             <div>
                                 <h4>Người giao</h4>
                                 <div id="dailyDelivererStats" class="stats-table"></div>
@@ -1802,6 +1824,11 @@
                     <article id="yearlyStatsCard" class="dash-card hidden">
                         <h3 id="yearlySummary">Theo năm</h3>
                         <div class="dash-cols">
+                            <div>
+                                <h4>Người soạn</h4>
+                                <div id="yearlyPickerStats" class="stats-table"></div>
+                            </div>
+                            
                             <div>
                                 <h4>Người đóng</h4>
                                 <div id="yearlyPackerStats" class="stats-table"></div>
@@ -1940,6 +1967,7 @@
                         <option value="completed">Thành công</option>
                         <option value="ai_processing">AI đang đọc</option>
                         <option value="failed">Thất bại</option>
+                        <option value="canceled">Đã hủy</option>
                         <option value="duplicated">Trùng đơn hàng</option>
                         <option value="warning">Thiếu thông tin</option>
                     </select>
@@ -1954,6 +1982,24 @@
             <p id="editEmployeeHint" class="edit-hint"></p>
 
             <div class="employee-grid">
+                <section class="employee-card">
+                    <h4>Người soạn</h4>
+
+                    <label>
+                        <select id="editPickerEmployee" multiple size="6"></select>
+                    </label>
+
+                    <label>
+                        Tên người soạn
+                        <input id="editPickerNS" type="text" placeholder="Tên người soạn">
+                    </label>
+
+                    <label>
+                        Mã người soạn
+                        <input id="editPickerNSCode" type="text" placeholder="Mã người soạn">
+                    </label>
+                </section>
+
                 <section class="employee-card">
                     <h4>Người đóng</h4>
 
@@ -1970,7 +2016,7 @@
                         Mã người đóng
                         <input id="editPackerNDCode" type="text" placeholder="Mã người đóng">
                     </label>
-                </section>
+                </section>                
 
                 <section class="employee-card">
                     <h4>Người giao</h4>
@@ -2115,40 +2161,32 @@
     const EMPLOYEE_TABLE = "employees";
     const AI_API_KEYS_TABLE = "ai_api_keys";
     const BUCKET_NAME = "order-images";
-    const ORDER_STATUSES = ["completed", "ai_processing", "failed", "duplicated", "warning"];
+    const ORDER_STATUSES = ["completed", "ai_processing", "failed", "canceled", "duplicated", "warning"];
     const STATUS_LABELS = {
         ai_processing: "AI đang đọc",
         completed: "Thành công",
         failed: "Thất bại",
+        canceled: "Đã hủy",
         duplicated: "Trùng đơn hàng",
         warning: "Thiếu thông tin"
     };
     const STATUS_ALIASES = {
-        "ai processing": "ai_processing",
+        "ai_processing": "ai_processing",
         "processing": "ai_processing",
-        "in progress": "ai_processing",
-        "inprogress": "ai_processing",
-        "pending": "ai_processing",
-        "dang xu ly": "ai_processing",
-        "ai dang doc": "ai_processing",
         "completed": "completed",
         "complete": "completed",
-        "success": "completed",
-        "done": "completed",
-        "thanh cong": "completed",
+        "duplicated": "duplicated",
+        "duplicate": "duplicated",
+        "warning": "warning",
+        "warn": "warning",
+        "canceled": "canceled",
+        "cancelled": "canceled",
+        "cancel": "canceled",
+        "da huy": "canceled",
+        "huy": "canceled",
         "failed": "failed",
         "fail": "failed",
         "error": "failed",
-        "that bai": "failed",
-        "duplicated": "duplicated",
-        "duplicate": "duplicated",
-        "trung don": "duplicated",
-        "trung don hang": "duplicated",
-        "warning": "warning",
-        "warn": "warning",
-        "thieu thong tin": "warning",
-        "missing info": "warning",
-        "missing information": "warning"
     };
 
     const supabaseClient = window.supabase
@@ -2612,6 +2650,10 @@
             return "processing";
         }
 
+        if (normalized === "canceled") {
+            return "canceled";
+        }
+
         if (normalized === "failed") {
             return "failed";
         }
@@ -2909,6 +2951,17 @@
         return row;
     }
 
+    function formatPersonInfo(nameValue, codeValue) {
+        const nameText = String(nameValue || "").trim();
+        const codeText = String(codeValue || "").trim();
+
+        if (nameText && codeText) {
+            return `${nameText} (${codeText})`;
+        }
+
+        return nameText || codeText || "-";
+    }
+
     function createOrderCard(order) {
         const card = document.createElement("article");
         card.className = "order-card";
@@ -2940,8 +2993,9 @@
         content.appendChild(createInfoRow("📅 Ngày:", formatDate(order.OrderDate || order.CreatedAt), false));
         content.appendChild(createInfoRow("👤 Khách hàng:", order.CustomerName || "-", false));
         content.appendChild(createInfoRow("📦 Số kiện:", String(order.QuantitySK ?? "-"), false));
-        content.appendChild(createInfoRow("👷 Người đóng:", order.PackerND || "-", false));
-        content.appendChild(createInfoRow("🚚 Người giao:", order.DelivererNG || "-", false));
+        content.appendChild(createInfoRow("🧾 Người soạn:", formatPersonInfo(order.PickerNS, ""), false));
+        content.appendChild(createInfoRow("👷 Người đóng:", formatPersonInfo(order.PackerND, ""), false));
+        content.appendChild(createInfoRow("🚚 Người giao:", formatPersonInfo(order.DelivererNG, ""), false));
         content.appendChild(createInfoRow("🏷️ Trạng thái:", order.Status || "-", true));
         content.appendChild(createInfoRow("💬 Telegram:", order.TelegramUsername || "-", false));
         content.appendChild(createInfoRow("🕒 Chat lúc:", formatDateTime(order.CreatedAt), false));
@@ -3014,7 +3068,7 @@
         if (!state.filteredOrders.length) {
             const row = document.createElement("tr");
             const cell = document.createElement("td");
-            cell.colSpan = 9;
+            cell.colSpan = 10;
             cell.className = "table-empty";
             cell.textContent = "Không có đơn hàng phù hợp bộ lọc";
             row.appendChild(cell);
@@ -3031,8 +3085,9 @@
             row.appendChild(createTableCell(formatDate(order.OrderDate), ""));
             row.appendChild(createTableCell(order.CustomerName || "-", ""));
             row.appendChild(createTableCell(String(order.QuantitySK ?? "-"), ""));
-            row.appendChild(createTableCell(order.PackerND || "-", ""));
-            row.appendChild(createTableCell(order.DelivererNG || "-", ""));
+            row.appendChild(createTableCell(formatPersonInfo(order.PickerNS, ""), ""));
+            row.appendChild(createTableCell(formatPersonInfo(order.PackerND, ""), ""));
+            row.appendChild(createTableCell(formatPersonInfo(order.DelivererNG, ""), ""));
 
             const statusCell = document.createElement("td");
             const normalizedStatus = normalizeStatusValue(order.Status);
@@ -3135,14 +3190,28 @@
         return parts.length ? parts : ["Không có dữ liệu"];
     }
 
-    function aggregateByPerson(orders, fieldName, options) {
+    function getDashboardPersonSource(order, nameField, codeField) {
+        const nameText = String((order && order[nameField]) || "").trim();
+        if (nameText) {
+            return nameText;
+        }
+
+        if (!codeField) {
+            return "";
+        }
+
+        return String((order && order[codeField]) || "").trim();
+    }
+
+    function aggregateByPerson(orders, fieldName, options, codeFieldName) {
         const settings = options || {};
         const explode = Boolean(settings.explode);
 
         const map = new Map();
 
         for (const order of orders) {
-            const people = splitDashboardPersonValues(order[fieldName], explode);
+            const sourceValue = getDashboardPersonSource(order, fieldName, codeFieldName);
+            const people = splitDashboardPersonValues(sourceValue, explode);
             const uniquePeople = explode ? Array.from(new Set(people)) : people;
 
             // Nếu explode = true thì mỗi người được chia ra 1 phần đơn, ví dụ: 1 đơn có 2 người đóng thì mỗi người 0.5 đơn
@@ -3199,6 +3268,7 @@
             completed: 0,
             processing: 0,
             failed: 0,
+            canceled: 0,
             duplicated: 0,
             warning: 0,
             other: 0
@@ -3213,6 +3283,8 @@
                 summary.processing += 1;
             } else if (normalized === "failed") {
                 summary.failed += 1;
+            } else if (normalized === "canceled") {
+                summary.canceled += 1;
             } else if (normalized === "duplicated") {
                 summary.duplicated += 1;
             } else if (normalized === "warning") {
@@ -3261,6 +3333,7 @@
         byId("kpiCompleted").textContent = String(summary.completed);
         byId("kpiProcessing").textContent = String(summary.processing);
         byId("kpiFailed").textContent = String(summary.failed);
+        byId("kpiCanceled").textContent = String(summary.canceled);
         byId("kpiDuplicated").textContent = String(summary.duplicated);
         byId("kpiWarning").textContent = String(summary.warning);
     }
@@ -3294,6 +3367,12 @@
             labels.push(statusDisplayName("failed"));
             values.push(summary.failed);
             colors.push("#ef4444");
+        }
+
+        if (summary.canceled > 0) {
+            labels.push(statusDisplayName("canceled"));
+            values.push(summary.canceled);
+            colors.push("#6b7280");
         }
 
         if (summary.duplicated > 0) {
@@ -3358,8 +3437,8 @@
         byId("statusPieOrdersCount").textContent = `(Tổng số ${orders.length} đơn hàng)`;        
     }
 
-    function topPeople(orders, fieldName, limit, options) {
-        return aggregateByPerson(orders, fieldName, options).slice(0, limit);
+    function topPeople(orders, fieldName, limit, options, codeFieldName) {
+        return aggregateByPerson(orders, fieldName, options, codeFieldName).slice(0, limit);
     }
 
     function parseQuantityValue(value) {
@@ -3404,14 +3483,15 @@
         });
     }
 
-    function aggregateQuantityByPerson(orders, fieldName, options) {
+    function aggregateQuantityByPerson(orders, fieldName, options, codeFieldName) {
         const settings = options || {};
         const explode = Boolean(settings.explode);
 
         const map = new Map();
 
         for (const order of orders) {
-            const people = splitDashboardPersonValues(order[fieldName], explode);
+            const sourceValue = getDashboardPersonSource(order, fieldName, codeFieldName);
+            const people = splitDashboardPersonValues(sourceValue, explode);
             const uniquePeople = explode ? Array.from(new Set(people)) : people;
             const quantity = parseQuantityValue(order.QuantitySK);
 
@@ -3426,9 +3506,9 @@
             .sort((a, b) => b.quantity - a.quantity || a.name.localeCompare(b.name, "vi"));
     }
 
-    function buildPersonStatsRows(orders, fieldName, options) {
-        const countRows = aggregateByPerson(orders, fieldName, options);
-        const quantityRows = aggregateQuantityByPerson(orders, fieldName, options);
+    function buildPersonStatsRows(orders, fieldName, options, codeFieldName) {
+        const countRows = aggregateByPerson(orders, fieldName, options, codeFieldName);
+        const quantityRows = aggregateQuantityByPerson(orders, fieldName, options, codeFieldName);
         const quantityMap = new Map(quantityRows.map((item) => [item.name, item.quantity]));
 
         return countRows.map((item) => ({
@@ -3438,8 +3518,8 @@
         }));
     }
 
-    function topPeopleByQuantity(orders, fieldName, limit, options) {
-        return aggregateQuantityByPerson(orders, fieldName, options).slice(0, limit);
+    function topPeopleByQuantity(orders, fieldName, limit, options, codeFieldName) {
+        return aggregateQuantityByPerson(orders, fieldName, options, codeFieldName).slice(0, limit);
     }
 
     function renderStaffBarChart(orders, explodePeople) {
@@ -3451,11 +3531,13 @@
         }
 
         const aggregateOptions = { explode: explodePeople };
-        const packers = topPeople(orders, "PackerND", 6, aggregateOptions);
-        const deliverers = topPeople(orders, "DelivererNG", 6, aggregateOptions);
+        const packers = topPeople(orders, "PackerND", 6, aggregateOptions, "PackerNDCode");
+        const pickers = topPeople(orders, "PickerNS", 6, aggregateOptions, "PickerNSCode");
+        const deliverers = topPeople(orders, "DelivererNG", 6, aggregateOptions, "DelivererNGCode");
 
         const labels = Array.from(new Set([
             ...packers.map((item) => item.name),
+            ...pickers.map((item) => item.name),
             ...deliverers.map((item) => item.name)
         ]));
 
@@ -3465,6 +3547,7 @@
         }
 
         const packerMap = new Map(packers.map((item) => [item.name, item.count]));
+        const pickerMap = new Map(pickers.map((item) => [item.name, item.count]));
         const delivererMap = new Map(deliverers.map((item) => [item.name, item.count]));
 
         setChartEmptyState("staffBarEmpty", "");
@@ -3475,6 +3558,13 @@
             data: {
                 labels,
                 datasets: [
+                    {
+                        label: "Người soạn",
+                        data: labels.map((label) => pickerMap.get(label) || 0),
+                        backgroundColor: "rgba(234, 179, 8, 0.75)",
+                        borderColor: "#ca8a04",
+                        borderWidth: 1
+                    },
                     {
                         label: "Người đóng",
                         data: labels.map((label) => packerMap.get(label) || 0),
@@ -3524,11 +3614,13 @@
         }
 
         const aggregateOptions = { explode: explodePeople };
-        const packers = topPeopleByQuantity(orders, "PackerND", 6, aggregateOptions);
-        const deliverers = topPeopleByQuantity(orders, "DelivererNG", 6, aggregateOptions);
+        const packers = topPeopleByQuantity(orders, "PackerND", 6, aggregateOptions, "PackerNDCode");
+        const pickers = topPeopleByQuantity(orders, "PickerNS", 6, aggregateOptions, "PickerNSCode");
+        const deliverers = topPeopleByQuantity(orders, "DelivererNG", 6, aggregateOptions, "DelivererNGCode");
 
         const labels = Array.from(new Set([
             ...packers.map((item) => item.name),
+            ...pickers.map((item) => item.name),
             ...deliverers.map((item) => item.name)
         ]));
 
@@ -3538,6 +3630,7 @@
         }
 
         const packerMap = new Map(packers.map((item) => [item.name, item.quantity]));
+        const pickerMap = new Map(pickers.map((item) => [item.name, item.quantity]));
         const delivererMap = new Map(deliverers.map((item) => [item.name, item.quantity]));
 
         setChartEmptyState("staffQuantityBarEmpty", "");
@@ -3549,14 +3642,21 @@
                 labels,
                 datasets: [
                     {
-                        label: "Người đóng (kiện)",
+                        label: "Người soạn",
+                        data: labels.map((label) => pickerMap.get(label) || 0),
+                        backgroundColor: "rgba(161, 98, 7, 0.75)",
+                        borderColor: "#92400e",
+                        borderWidth: 1
+                    },
+                    {
+                        label: "Người đóng",
                         data: labels.map((label) => packerMap.get(label) || 0),
                         backgroundColor: "rgba(14, 116, 144, 0.75)",
                         borderColor: "#0e7490",
                         borderWidth: 1
                     },
                     {
-                        label: "Người giao (kiện)",
+                        label: "Người giao",
                         data: labels.map((label) => delivererMap.get(label) || 0),
                         backgroundColor: "rgba(217, 119, 6, 0.75)",
                         borderColor: "#d97706",
@@ -4088,12 +4188,15 @@
         renderTrendLineChart(trendOrders, state.dashboardMode);
 
         const personAggregateOptions = { explode: state.dashboardExplode };
-        renderStatsTable(byId("dailyPackerStats"), buildPersonStatsRows(dailyOrders, "PackerND", personAggregateOptions));
-        renderStatsTable(byId("dailyDelivererStats"), buildPersonStatsRows(dailyOrders, "DelivererNG", personAggregateOptions));
-        renderStatsTable(byId("monthlyPackerStats"), buildPersonStatsRows(monthlyOrders, "PackerND", personAggregateOptions));
-        renderStatsTable(byId("monthlyDelivererStats"), buildPersonStatsRows(monthlyOrders, "DelivererNG", personAggregateOptions));
-        renderStatsTable(byId("yearlyPackerStats"), buildPersonStatsRows(yearlyOrders, "PackerND", personAggregateOptions));
-        renderStatsTable(byId("yearlyDelivererStats"), buildPersonStatsRows(yearlyOrders, "DelivererNG", personAggregateOptions));
+        renderStatsTable(byId("dailyPackerStats"), buildPersonStatsRows(dailyOrders, "PackerND", personAggregateOptions, "PackerNDCode"));
+        renderStatsTable(byId("dailyPickerStats"), buildPersonStatsRows(dailyOrders, "PickerNS", personAggregateOptions, "PickerNSCode"));
+        renderStatsTable(byId("dailyDelivererStats"), buildPersonStatsRows(dailyOrders, "DelivererNG", personAggregateOptions, "DelivererNGCode"));
+        renderStatsTable(byId("monthlyPackerStats"), buildPersonStatsRows(monthlyOrders, "PackerND", personAggregateOptions, "PackerNDCode"));
+        renderStatsTable(byId("monthlyPickerStats"), buildPersonStatsRows(monthlyOrders, "PickerNS", personAggregateOptions, "PickerNSCode"));
+        renderStatsTable(byId("monthlyDelivererStats"), buildPersonStatsRows(monthlyOrders, "DelivererNG", personAggregateOptions, "DelivererNGCode"));
+        renderStatsTable(byId("yearlyPackerStats"), buildPersonStatsRows(yearlyOrders, "PackerND", personAggregateOptions, "PackerNDCode"));
+        renderStatsTable(byId("yearlyPickerStats"), buildPersonStatsRows(yearlyOrders, "PickerNS", personAggregateOptions, "PickerNSCode"));
+        renderStatsTable(byId("yearlyDelivererStats"), buildPersonStatsRows(yearlyOrders, "DelivererNG", personAggregateOptions, "DelivererNGCode"));
     }
 
     function buildStatusFilterOptions() {
@@ -4188,7 +4291,7 @@
     }
 
     function renderEmployeeSelectOptions() {
-        const selectIds = ["editPackerEmployee", "editDelivererEmployee"];
+        const selectIds = ["editPackerEmployee", "editPickerEmployee", "editDelivererEmployee"];
 
         for (const selectId of selectIds) {
             const select = byId(selectId);
@@ -4242,12 +4345,38 @@
     }
 
     function getEmployeeEditorFields(role) {
-        const isPacker = role === "packer";
+        const roleMap = {
+            packer: {
+                selectId: "editPackerEmployee",
+                nameInputId: "editPackerND",
+                codeInputId: "editPackerNDCode"
+            },
+            picker: {
+                selectId: "editPickerEmployee",
+                nameInputId: "editPickerNS",
+                codeInputId: "editPickerNSCode"
+            },
+            deliverer: {
+                selectId: "editDelivererEmployee",
+                nameInputId: "editDelivererNG",
+                codeInputId: "editDelivererNGCode"
+            }
+        };
+
+        const config = roleMap[role];
+
+        if (!config) {
+            return {
+                select: null,
+                nameInput: null,
+                codeInput: null
+            };
+        }
 
         return {
-            select: byId(isPacker ? "editPackerEmployee" : "editDelivererEmployee"),
-            nameInput: byId(isPacker ? "editPackerND" : "editDelivererNG"),
-            codeInput: byId(isPacker ? "editPackerNDCode" : "editDelivererNGCode")
+            select: byId(config.selectId),
+            nameInput: byId(config.nameInputId),
+            codeInput: byId(config.codeInputId)
         };
     }
 
@@ -4398,11 +4527,14 @@
 
         byId("editPackerND").value = order.PackerND || "";
         byId("editPackerNDCode").value = order.PackerNDCode || "";
+        byId("editPickerNS").value = order.PickerNS || "";
+        byId("editPickerNSCode").value = order.PickerNSCode || "";
         byId("editDelivererNG").value = order.DelivererNG || "";
         byId("editDelivererNGCode").value = order.DelivererNGCode || "";
 
         renderEmployeeSelectOptions();
         fillEmployeeSelectByCurrentValue("packer");
+        fillEmployeeSelectByCurrentValue("picker");
         fillEmployeeSelectByCurrentValue("deliverer");
 
         setEditMessage("", false);
@@ -4416,7 +4548,7 @@
         byId("editOrderForm").reset();
         setDateControlValue("editOrderDate", "");
 
-        for (const role of ["packer", "deliverer"]) {
+        for (const role of ["packer", "picker", "deliverer"]) {
             const { select } = getEmployeeEditorFields(role);
             if (select) {
                 if (select.tomselect) {
@@ -4465,6 +4597,7 @@
         }
 
         const packerPayload = getEmployeePayloadForRole("packer");
+        const pickerPayload = getEmployeePayloadForRole("picker");
         const delivererPayload = getEmployeePayloadForRole("deliverer");
 
         const payload = {
@@ -4475,6 +4608,8 @@
             Status: normalizeStatusValue(byId("editStatus").value) || null,
             PackerND: packerPayload.name,
             PackerNDCode: packerPayload.code,
+            PickerNS: pickerPayload.name,
+            PickerNSCode: pickerPayload.code,
             DelivererNG: delivererPayload.name,
             DelivererNGCode: delivererPayload.code
         };
@@ -5096,6 +5231,8 @@
                 order.CustomerName,
                 order.PackerND,
                 order.PackerNDCode,
+                order.PickerNS,
+                order.PickerNSCode,
                 order.DelivererNG,
                 order.DelivererNGCode,
                 order.Status
@@ -5261,7 +5398,11 @@
             KhachHang: order.CustomerName || "",
             SoKien: order.QuantitySK ?? "",
             NguoiDong: order.PackerND || "",
+            MaNguoiDong: order.PackerNDCode || "",
+            NguoiSoan: order.PickerNS || "",
+            MaNguoiSoan: order.PickerNSCode || "",
             NguoiGiao: order.DelivererNG || "",
+            MaNguoiGiao: order.DelivererNGCode || "",
             TrangThai: order.Status || "",
             ImagePath: order.ImagePath || ""
         }));
@@ -5330,6 +5471,7 @@
             byId("kpiCompleted").textContent = "0";
             byId("kpiProcessing").textContent = "0";
             byId("kpiFailed").textContent = "0";
+            byId("kpiCanceled").textContent = "0";
             byId("kpiDuplicated").textContent = "0";
             byId("kpiWarning").textContent = "0";
             buildStatusFilterOptions();
@@ -5443,6 +5585,7 @@
             await deleteOrder(editingOrder);
         });
         byId("editPackerEmployee").addEventListener("change", () => applyEmployeeFromSelect("packer"));
+        byId("editPickerEmployee").addEventListener("change", () => applyEmployeeFromSelect("picker"));
         byId("editDelivererEmployee").addEventListener("change", () => applyEmployeeFromSelect("deliverer"));
 
         const onSearch = debounce(() => {
