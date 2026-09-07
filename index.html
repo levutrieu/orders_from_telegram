@@ -683,6 +683,39 @@
             font-weight: 800;
         }
 
+        /* ========================= KPI STATUS COLORS ========================= */
+        /* Tổng đơn */
+        .kpi-card--total {
+        --kpi-color: #3b82f6;
+        } /* Thành công */
+        .kpi-card--completed {
+        --kpi-color: #22c55e;
+        } /* AI đang đọc */
+        .kpi-card--processing {
+        --kpi-color: #8b5cf6;
+        } /* Trùng đơn hàng */
+        .kpi-card--duplicated {
+        --kpi-color: #f59e0b;
+        } /* Thiếu thông tin */
+        .kpi-card--warning {
+        --kpi-color: #eab308;
+        } /* Thất bại */
+        .kpi-card--failed {
+        --kpi-color: #ef4444;
+        } /* Đã hủy */
+        .kpi-card--canceled {
+        --kpi-color: #6b7280;
+        } /* Thanh màu phía trên */
+        .kpi-card[class*="kpi-card--"]::before {
+        background: var(--kpi-color);
+        } /* Màu label */
+        .kpi-card[class*="kpi-card--"] .kpi-label {
+        color: var(--kpi-color);
+        } /* Màu số */
+        .kpi-card[class*="kpi-card--"] .kpi-value {
+        color: var(--kpi-color);
+        }
+
         .charts-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
@@ -717,7 +750,7 @@
 
         .chart-canvas-wrap {
             position: relative;
-            height: 280px;
+            height: 350px;
         }
 
         .chart-empty {
@@ -1743,37 +1776,31 @@
                 </div>
 
                 <div class="kpi-grid">
-                    <article class="kpi-card">
+                    <article class="kpi-card kpi-card--total">
                         <p class="kpi-label">Tổng đơn</p>
                         <p id="kpiTotalOrders" class="kpi-value">0</p>
                     </article>
-
-                    <article class="kpi-card">
+                    <article class="kpi-card kpi-card--completed">
                         <p class="kpi-label">Thành công</p>
                         <p id="kpiCompleted" class="kpi-value">0</p>
                     </article>
-
-                    <article class="kpi-card">
+                    <article class="kpi-card kpi-card--processing">
                         <p class="kpi-label">AI đang đọc</p>
                         <p id="kpiProcessing" class="kpi-value">0</p>
                     </article>
-
-                    <article class="kpi-card">
+                    <article class="kpi-card kpi-card--duplicated">
                         <p class="kpi-label">Trùng đơn hàng</p>
                         <p id="kpiDuplicated" class="kpi-value">0</p>
                     </article>
-
-                    <article class="kpi-card">
+                    <article class="kpi-card kpi-card--warning">
                         <p class="kpi-label">Thiếu thông tin</p>
                         <p id="kpiWarning" class="kpi-value">0</p>
                     </article>
-
-                    <article class="kpi-card">
+                    <article class="kpi-card kpi-card--failed">
                         <p class="kpi-label">Thất bại</p>
                         <p id="kpiFailed" class="kpi-value">0</p>
                     </article>
-
-                    <article class="kpi-card">
+                    <article class="kpi-card kpi-card--canceled">
                         <p class="kpi-label">Đã hủy</p>
                         <p id="kpiCanceled" class="kpi-value">0</p>
                     </article>
