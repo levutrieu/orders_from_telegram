@@ -11,7 +11,7 @@
             /* ---- Nền & bề mặt ---- */
             --bg: #f3f5fa;
             --panel: #ffffff;
-            --panel-secondary: #eef1f7;
+            --panel-secondary: #fafafa;
             --text: #101728;
             --muted: #667085;
 
@@ -566,7 +566,7 @@
             }
 
             .app-tab-btn {
-                padding: 8px 14px;
+                padding: 8px 4px;
                 font-size: 11.5px;
             }
         }
@@ -620,7 +620,7 @@
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
-            align-items: center;
+            align-items: flex-end;
             flex: 1;
         }
 
@@ -644,9 +644,45 @@
             box-shadow: 0 0 0 4px var(--brand-glow);
         }
 
+        /* Date range */
+        .filters .date-range {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+        }
+        .filters .input-field {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .filters .input-field label {
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 1;
+            color: var(--muted);
+            padding-left: 2px;
+        }
+        .filters .input-field input {
+            width: 125px;
+        }
+        /* Nút xóa lọc căn cùng hàng với input */
+        .filters #clearFiltersBtn {
+            height: 37px;
+        }
+        /* Mobile */
+        @media (max-width: 600px) {
+            .filters .date-range {
+                width: 100%;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+            .filters .input-field input {
+                width: 100%;
+            }
+        }
+
         #searchInput {
             min-width: 380px;
-            flex: 1;
         }
 
         .view-switch {
@@ -1834,11 +1870,12 @@
         }
 
         @media (max-width: 760px) {
-            .container { padding: 0 12px; }
+            .container { padding: 0 5px; }
+            .dashboard, .dash-card { padding: 10px;}
             .dashboard-explode-toggle { width: 100%; }
             #searchInput { min-width: 100%; }
             .view-switch { width: 100%; }
-            .view-switch .toggle { flex: 1; }
+            .view-switch .toggle { flex: 1; padding: 10px 8px; }
             .list-view-switch-wrap { justify-content: stretch; width: 100%; }
             .app-tabs { width: 100%; }
             .app-tab-btn { flex: 1; text-align: center; }
@@ -1926,15 +1963,44 @@
                 </div>
 
                 <div class="filters">
-                    <input id="searchInput" type="search" placeholder="Tìm theo mã đơn, khách hàng, người đóng, người soạn, người giao...">
+                    <div class="input-field">
+                        <label for="dateFrom">Tìm kiếm</label>
+                        <input
+                            id="searchInput"
+                            type="search"
+                            placeholder="Nhập thông tin tìm kiếm..."
+                        />
+                    </div>
 
-                    <select id="statusFilter">
-                        <option value="">Tất cả trạng thái</option>
-                    </select>
+                    <div class="input-field">
+                        <label for="dateFrom">Tình trạng</label>
+                        <select id="statusFilter">
+                            <option value="">Tất cả</option>
+                        </select>
+                    </div>
 
-                    <input id="dateFrom" type="text" title="Từ ngày" placeholder="dd/MM/yyyy" autocomplete="off">
-                    <input id="dateTo" type="text" title="Đến ngày" placeholder="dd/MM/yyyy" autocomplete="off">
-
+                    <div class="date-range">
+                        <div class="input-field">
+                            <label for="dateFrom">Từ ngày</label>
+                            <input
+                                id="dateFrom"
+                                type="text"
+                                title="Từ ngày"
+                                placeholder="dd/MM/yyyy"
+                                autocomplete="off"
+                            />
+                        </div>
+                        <div class="input-field">
+                            <label for="dateTo">Đến ngày</label>
+                            <input
+                                id="dateTo"
+                                type="text"
+                                title="Đến ngày"
+                                placeholder="dd/MM/yyyy"
+                                autocomplete="off"
+                            />
+                        </div>
+                    </div>
                     <button id="clearFiltersBtn" type="button" class="secondary">Xóa lọc</button>
                 </div>
             </div>
@@ -4702,7 +4768,7 @@
         const select = byId("statusFilter");
         const previous = select.value;
 
-        select.innerHTML = '<option value="">Tất cả trạng thái</option>';
+        select.innerHTML = '<option value="">Tất cả</option>';
 
         for (const status of ORDER_STATUSES) {
             const option = document.createElement("option");
@@ -6202,6 +6268,8 @@
         byId("dashboardExplodeToggle").checked = true;
         state.dashboardExplode = true;
         setDashboardMode("day");
+
+        setDateControlValue("dateFrom", toIsoDate(today));
 
         if (!supabaseClient) {
             setLoginMessage("Không tải được thư viện Supabase.", true);
